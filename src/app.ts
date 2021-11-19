@@ -64,6 +64,8 @@ function createUserEvents() {
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e: Event) => changeMode("centroid"));
     controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
+    // Pause button
+    controllsStepButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData))
 }
 
 
@@ -206,28 +208,45 @@ export class KMeans {
     private points: Point[];
     private centroids: Centroid[];
 
-    private maxIter:  number = 1;
+    private maxIter: number = 1;
 
     constructor(points: Point[], centroids: Centroid[])  {
         this.points = points;
         this.centroids = centroids;
-        this.run();
-    }
-
-    private run() {
         this.step();
     }
 
-    public step() {
+    public async step() {
         for (let i = 0; i < this.maxIter; i++) {
+
+            pushMessage("Checking distances & assigning points to the closest centroid...")
             for (let j = 0; j < this.points.length; j++) {
                 let minDistance: number = Infinity;
                 let distance: number;
                 let closestCentroid: Centroid = this.centroids[0]; //Can't assign null/undefined
                 for (let k = 0; k < this.centroids.length; k++) {
-                
-                    let distanceLine = distancesGroup.selectAll("distaneLine").data([this.points[j]]);
-                    distanceLine.enter().append("distanceLine")
+
+                    // pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
+                    // let points = pointsGroup.selectAll("circle").data(pointsData);
+
+                    // // Draw
+                    // points.exit().remove();
+                    // points
+                    //     .attr("cx", (p) => {
+                    //         return p.x;
+                    //     })
+                    //     .attr("cy", (p) => {
+                    //         return p.y;
+                    //     })
+                    //     .attr("fill", (p) => {
+                    //         return p.color;
+                    //     })
+                    //     .attr("r", 5);
+                    
+                    let distanceLine = distancesGroup.selectAll("line").data([this.points[j]]).enter().append("line");
+
+                    // Draw
+                    distanceLine
                         .attr("x1", (d) => {
                             return d.x;
                         })
@@ -240,9 +259,11 @@ export class KMeans {
                         .attr("y2", () => {
                             return this.centroids[k].y;
                         })
-                        .attr("stroke", () => {
-                            return this.centroids[k].color;
-                        });
+                        .attr("stroke", "white")
+                        .attr("stroke-opacity", 50);
+
+                    await new Promise(f => setTimeout(f, 500));
+                    distanceLine.remove();
 
                     distance = this.calculateDistance(this.points[j], this.centroids[k]);
                     if (distance < minDistance) {
@@ -252,7 +273,9 @@ export class KMeans {
                 }
                 this.points[j].centroid = closestCentroid;
                 this.points[j].color = closestCentroid.color;
-            }         
+                pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
+            }
+            pushMessage("Calculating the means and updating centroids...", undefined)    
         }
     }
 

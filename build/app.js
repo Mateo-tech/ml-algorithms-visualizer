@@ -45,7 +45,7 @@ document.getElementById("add-centroids-remove-btn");
 // Controlls
 let controllsPlayButton = document.getElementById("controlls-play-btn");
 document.getElementById("controlls-pause-btn");
-document.getElementById("controlls-step-btn");
+let controllsStepButton = document.getElementById("controlls-step-btn");
 document.getElementById("controlls-reset-btnn");
 document.getElementById("speed-range-slider");
 // Verbose
@@ -76,6 +76,8 @@ function createUserEvents() {
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));
     controllsPlayButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
+    // Pause button
+    controllsStepButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
 }
 function changeMode(newMode) {
     mode = newMode;
@@ -83,7 +85,6 @@ function changeMode(newMode) {
 function pressEventHandler(e) {
     let x = d3__namespace.pointer(e)[0];
     let y = d3__namespace.pointer(e)[1];
-    console.log("mode");
     switch (mode) {
         case "none": {
             break;
@@ -179,20 +180,34 @@ class KMeans {
         this.maxIter = 1;
         this.points = points;
         this.centroids = centroids;
-        this.run();
-    }
-    run() {
         this.step();
     }
-    step() {
+    async step() {
         for (let i = 0; i < this.maxIter; i++) {
+            pushMessage("Checking distances & assigning points to the closest centroid...");
             for (let j = 0; j < this.points.length; j++) {
                 let minDistance = Infinity;
                 let distance;
                 let closestCentroid = this.centroids[0]; //Can't assign null/undefined
                 for (let k = 0; k < this.centroids.length; k++) {
-                    let distanceLine = distancesGroup.selectAll("distaneLine").data([this.points[j]]);
-                    distanceLine.enter().append("distanceLine")
+                    // pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
+                    // let points = pointsGroup.selectAll("circle").data(pointsData);
+                    // // Draw
+                    // points.exit().remove();
+                    // points
+                    //     .attr("cx", (p) => {
+                    //         return p.x;
+                    //     })
+                    //     .attr("cy", (p) => {
+                    //         return p.y;
+                    //     })
+                    //     .attr("fill", (p) => {
+                    //         return p.color;
+                    //     })
+                    //     .attr("r", 5);
+                    let distanceLine = distancesGroup.selectAll("line").data([this.points[j]]).enter().append("line");
+                    // Draw
+                    distanceLine
                         .attr("x1", (d) => {
                         return d.x;
                     })
@@ -205,9 +220,10 @@ class KMeans {
                         .attr("y2", () => {
                         return this.centroids[k].y;
                     })
-                        .attr("stroke", () => {
-                        return this.centroids[k].color;
-                    });
+                        .attr("stroke", "white")
+                        .attr("stroke-opacity", 50);
+                    await new Promise(f => setTimeout(f, 500));
+                    distanceLine.remove();
                     distance = this.calculateDistance(this.points[j], this.centroids[k]);
                     if (distance < minDistance) {
                         minDistance = distance;
@@ -216,7 +232,9 @@ class KMeans {
                 }
                 this.points[j].centroid = closestCentroid;
                 this.points[j].color = closestCentroid.color;
+                pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
             }
+            pushMessage("Calculating the means and updating centroids...", undefined);
         }
     }
     calculateDistance(a, b) {
