@@ -1,46 +1,59 @@
+(function (global, factory) {
+typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
+typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
+(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.d3 = global.d3 || {}, global.d3));
+})(this, (function (exports, d3) { 'use strict';
+
+function _interopNamespace(e) {
+if (e && e.__esModule) return e;
+var n = Object.create(null);
+if (e) {
+Object.keys(e).forEach(function (k) {
+if (k !== 'default') {
+var d = Object.getOwnPropertyDescriptor(e, k);
+Object.defineProperty(n, k, d.get ? d : {
+enumerable: true,
+get: function () { return e[k]; }
+});
+}
+});
+}
+n["default"] = e;
+return Object.freeze(n);
+}
+
+var d3__namespace = /*#__PURE__*/_interopNamespace(d3);
+
 //import { Point, Centroid, KMeans, Vector } from "./algorithms/kmeans.js";
-import * as d3 from "d3";
 const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
-const svg = d3.select("#canvas svg").attr("width", WIDTH).attr("height", HEIGHT);
+const svg = d3__namespace.select("#canvas svg").attr("width", WIDTH).attr("height", HEIGHT);
 const distancesGroup = svg.append("g");
 const pointsGroup = svg.append("g");
-const centroidsGroup = svg.append("g");
+svg.append("g");
 // Points
 let addPointsManuallyButton = document.getElementById("add-points-manually-btn");
-let addPointsRandomlyButton = document.getElementById("add-points-randomly-btn");
-let addPointsLoadButtton = document.getElementById("add-points-load-btn");
-let pointsRemoveButton = document.getElementById("btn btn-danger float-end");
+document.getElementById("add-points-randomly-btn");
+document.getElementById("add-points-load-btn");
+document.getElementById("btn btn-danger float-end");
 // Centroids
 let addCentroidsManuallyButton = document.getElementById("add-centroids-manually-btn");
-let addCentroidsRandomlyButton = document.getElementById("add-centroids-randomly-btn");
-let addCentroidsSmartButtton = document.getElementById("add-centroids-smart-btn");
-let centroidsRemoveButton = document.getElementById("add-centroids-remove-btn");
+document.getElementById("add-centroids-randomly-btn");
+document.getElementById("add-centroids-smart-btn");
+document.getElementById("add-centroids-remove-btn");
 // Controlls
 let controllsPlayButton = document.getElementById("controlls-play-btn");
-let controllsPauseButton = document.getElementById("controlls-pause-btn");
-let controllsStepButton = document.getElementById("controlls-step-btn");
-let controllsResetButton = document.getElementById("controlls-reset-btnn");
-let controllsSliderButton = document.getElementById("speed-range-slider");
+document.getElementById("controlls-pause-btn");
+document.getElementById("controlls-step-btn");
+document.getElementById("controlls-reset-btnn");
+document.getElementById("speed-range-slider");
 // Verbose
 let mainMessage = document.getElementById("message-window-main-message");
 let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
 let centroidsData = [];
 let mode; //"none", "point", "centroid"
-let centroidColors = [
-    '#ED0A3F',
-    '#0095B7',
-    '#33CC99',
-    '#00468C',
-    '#0066FF',
-    '#EE34D2',
-    '#C88A65',
-    '#A50B5E',
-    '#733380',
-    '#87421F'
-];
 createUserEvents();
 function createUserEvents() {
     svg.on("click", (e) => {
@@ -51,22 +64,19 @@ function createUserEvents() {
     controllsPlayButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
 }
 function changeMode(newMode) {
+    console.log("lol");
     mode = newMode;
 }
 function pressEventHandler(e) {
     let x = e.pageX;
     let y = e.pageY;
-    console.log(mode);
+    console.log("oi");
     switch (mode) {
         case "none": {
             break;
         }
         case "point": {
             addPoint(x, y);
-            break;
-        }
-        case "centroid": {
-            // addCentroid(x, y, centroidColors[centroids.length]);
             break;
         }
     }
@@ -132,7 +142,7 @@ function addPoint(x, y, color = "white", centroid) {
 //     await delay(500);
 //     ctxTemp.clearRect(0, 0, canvasTemp.width, canvasTemp.height);
 // }
-export function pushMessage(mainMessageText, subMessageText) {
+function pushMessage(mainMessageText, subMessageText) {
     if (mainMessageText != undefined) {
         mainMessage.innerText = mainMessageText;
     }
@@ -140,10 +150,7 @@ export function pushMessage(mainMessageText, subMessageText) {
         subMessage.innerText = subMessageText;
     }
 }
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-export class KMeans {
+class KMeans {
     constructor(points, centroids) {
         this.maxIter = 1;
         this.points = points;
@@ -194,3 +201,10 @@ export class KMeans {
     draw() {
     }
 }
+
+exports.KMeans = KMeans;
+exports.pushMessage = pushMessage;
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+}));

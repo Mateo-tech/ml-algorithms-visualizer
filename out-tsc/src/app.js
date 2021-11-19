@@ -51,12 +51,13 @@ function createUserEvents() {
     controllsPlayButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
 }
 function changeMode(newMode) {
+    console.log("lol");
     mode = newMode;
 }
 function pressEventHandler(e) {
     let x = e.pageX;
     let y = e.pageY;
-    console.log(mode);
+    console.log("oi");
     switch (mode) {
         case "none": {
             break;

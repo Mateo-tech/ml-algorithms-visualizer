@@ -66,6 +66,7 @@ function createUserEvents() {
 
 
 function changeMode(newMode: string) {
+    console.log("lol")
     mode = newMode;
 }
 
@@ -73,7 +74,7 @@ function pressEventHandler(e: MouseEvent) {
     let x = e.pageX;
     let y = e.pageY;
 
-    console.log(mode);
+    console.log("oi");
 
     switch (mode) {
         case "none": {
