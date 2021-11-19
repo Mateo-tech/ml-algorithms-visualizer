@@ -56,11 +56,7 @@ createUserEvents();
 
 
 function createUserEvents() {
-    svg.on("click", function(event, d) {
-        console.log(d); 
-        console.log(d3.pointer(event, svg.node()));
-        pressEventHandler(event);
-    });
+    svg.on("click", (event, d) => pressEventHandler(event));
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e: Event) => changeMode("centroid"));
     controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
@@ -92,84 +88,87 @@ function pressEventHandler(e: MouseEvent) {
     }
 }
 
-// export function redraw(updatedPoints: Point[], updatedCentroids: Centroid[]) {
-// //     points = []
-// //     centroids = []
-// //     // Clear the canvas
-// //     ctxMain.clearRect(0, 0, canvasMain.width, canvasMain.height);
+export function redraw(updatedPoints: Point[], updatedCentroids: Centroid[]) {
+    pointsData = []
+    centroidsData = []
 
-// //     for (let point of updatedPoints) {
-// //         addPoint(point.x, point.y, point.color)
-// //     }
+    for (let point of updatedPoints) {
+        addPoint(point.x, point.y, point.color)
+    }
 
-// //     for (let centroid of updatedCentroids) {
-// //         addCentroid(centroid.x, centroid.y, centroid.color);
-// //     }
+    for (let centroid of updatedCentroids) {
+        addCentroid(centroid.x, centroid.y, centroid.color);
+    }
+}
 
-// //     console.log("Points: ");
-// //     console.log(points);
+export function redrawPoint(updatedPoint: Point) {
+    pointsGroup
+        .selectAll("circle[cx='" + updatedPoint.x + "'][cy='" + updatedPoint.y + "']")
+        .data([updatedPoint]).attr("fill", (p) => { return p.color; });
+}
 
-// //     console.log("Centroids");
-// //     console.log(centroids);
-// // }
+export function redrawCentroids(updatedCentroids: Centroid[]) {
+    let centroids = centroidsGroup.selectAll("circle").data(updatedCentroids).enter().append("circle");
+    centroids
+        .transition()
+        .duration(500)
+        .attr("cx", (c) => {
+            return c.x;
+        })
+        .attr("cy", (c) => {
+            return c.y;
+        })
+        .attr("fill", "#0a0d11")
+        .style("stroke-width", 2)
+        .style("stroke", (c) => {
+            return c.color;
+        })
+        .attr("r", 7);
+}
 
 function addPoint(x: number, y: number, color = "white", centroid?: Centroid) {
     pointsData.push({ x: x, y: y, color: color, centroid: centroid })
 
-    pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
-    let points = pointsGroup.selectAll("circle").data(pointsData);
+    let points = pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");;
 
     // Draw()
-    points.exit().remove();
     points
         .attr("cx", (p) => {
             return p.x;
-          })
+        })
         .attr("cy", (p) => {
             return p.y;
         })
         .attr("fill", (p) => {
             return p.color;
         })
-        .attr("r", 5);
+        .attr("r", 3);
 }
 
 function addCentroid(x: number, y: number, color: string) {
     if (centroidsData.length >= 10) {
         return;
     } else {
-        centroidsData.push({ x: x, y: y, color: color})
+        centroidsData.push({ x: x, y: y, color: color })
+    }
 
-        centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");
-        let centroids = centroidsGroup.selectAll("circle").data(centroidsData);
+    let centroids = centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");;
 
     // Draw()
-    centroids.exit().remove();
     centroids
         .attr("cx", (c) => {
             return c.x;
-          })
+        })
         .attr("cy", (c) => {
             return c.y;
         })
-        .attr("fill", (c) => {
+        .attr("fill", "#0a0d11")
+        .style("stroke-width", 2)
+        .style("stroke", (c) => {
             return c.color;
         })
         .attr("r", 7);
-    }
 }
-
-// export async function drawDistance(a: Vector, b: Vector) {
-//     canvasTemp.style.display = "block";
-//     ctxTemp.beginPath();
-//     ctxTemp.moveTo(a.x, a.y);
-//     ctxTemp.lineTo(b.x, b.y);
-//     ctxTemp.strokeStyle = "rgba(255, 255, 255, 0.3)";
-//     ctxTemp.stroke();
-//     ctxTemp.closePath();
-//     await delay(500);
-//     ctxTemp.clearRect(0, 0, canvasTemp.width, canvasTemp.height);
-// }
 
 export function pushMessage(mainMessageText?: string, subMessageText?: string) {
     if (mainMessageText != undefined) {
@@ -178,10 +177,6 @@ export function pushMessage(mainMessageText?: string, subMessageText?: string) {
     if (subMessageText != undefined) {
         subMessage.innerText = subMessageText;
     }
-}
-
-function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
 export type Vector = {
@@ -210,7 +205,7 @@ export class KMeans {
 
     private maxIter: number = 1;
 
-    constructor(points: Point[], centroids: Centroid[])  {
+    constructor(points: Point[], centroids: Centroid[]) {
         this.points = points;
         this.centroids = centroids;
         this.step();
@@ -226,23 +221,6 @@ export class KMeans {
                 let closestCentroid: Centroid = this.centroids[0]; //Can't assign null/undefined
                 for (let k = 0; k < this.centroids.length; k++) {
 
-                    // pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
-                    // let points = pointsGroup.selectAll("circle").data(pointsData);
-
-                    // // Draw
-                    // points.exit().remove();
-                    // points
-                    //     .attr("cx", (p) => {
-                    //         return p.x;
-                    //     })
-                    //     .attr("cy", (p) => {
-                    //         return p.y;
-                    //     })
-                    //     .attr("fill", (p) => {
-                    //         return p.color;
-                    //     })
-                    //     .attr("r", 5);
-                    
                     let distanceLine = distancesGroup.selectAll("line").data([this.points[j]]).enter().append("line");
 
                     // Draw
@@ -262,7 +240,7 @@ export class KMeans {
                         .attr("stroke", "white")
                         .attr("stroke-opacity", 50);
 
-                    await new Promise(f => setTimeout(f, 500));
+                    await new Promise(f => setTimeout(f, 200));
                     distanceLine.remove();
 
                     distance = this.calculateDistance(this.points[j], this.centroids[k]);
@@ -274,16 +252,31 @@ export class KMeans {
                 this.points[j].centroid = closestCentroid;
                 this.points[j].color = closestCentroid.color;
                 pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
+                redrawPoint(this.points[j]);
             }
-            pushMessage("Calculating the means and updating centroids...", undefined)    
+            pushMessage("Calculating the means and updating centroids...", undefined)
+            this.updateCentroids()
+            redrawCentroids(this.centroids);
+        }
+    }
+
+    private updateCentroids() {
+        for (let i = 0; i < this.centroids.length; i++) {
+            let clusteteredPoints: Point[] = this.points.filter(point => point.centroid === this.centroids[i]);
+            let sumX: number = 0;
+            let sumY: number = 0;
+            for (let j = 0; j < clusteteredPoints.length; j++) {
+                sumX += clusteteredPoints[j].x
+                sumY += clusteteredPoints[j].y
+            }
+            let newX: number = sumX / clusteteredPoints.length;
+            let newY: number = sumY / clusteteredPoints.length;
+            this.centroids[i].x = newX;
+            this.centroids[i].y = newY;
         }
     }
 
     private calculateDistance(a: Vector, b: Vector) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2))
-    }
-
-    private draw() {
-
     }
 }

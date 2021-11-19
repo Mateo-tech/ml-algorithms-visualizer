@@ -43,11 +43,7 @@ let centroidColors = [
 ];
 createUserEvents();
 function createUserEvents() {
-    svg.on("click", function (event, d) {
-        console.log(d);
-        console.log(d3.pointer(event, svg.node()));
-        pressEventHandler(event);
-    });
+    svg.on("click", (event, d) => pressEventHandler(event));
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));
     controllsPlayButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
@@ -74,28 +70,45 @@ function pressEventHandler(e) {
         }
     }
 }
-// export function redraw(updatedPoints: Point[], updatedCentroids: Centroid[]) {
-// //     points = []
-// //     centroids = []
-// //     // Clear the canvas
-// //     ctxMain.clearRect(0, 0, canvasMain.width, canvasMain.height);
-// //     for (let point of updatedPoints) {
-// //         addPoint(point.x, point.y, point.color)
-// //     }
-// //     for (let centroid of updatedCentroids) {
-// //         addCentroid(centroid.x, centroid.y, centroid.color);
-// //     }
-// //     console.log("Points: ");
-// //     console.log(points);
-// //     console.log("Centroids");
-// //     console.log(centroids);
-// // }
+export function redraw(updatedPoints, updatedCentroids) {
+    pointsData = [];
+    centroidsData = [];
+    // Remove the white points, guess I could also recolor them but ey
+    pointsGroup.selectAll("circle").data(pointsData).exit().remove();
+    centroidsGroup.selectAll("circle").remove();
+    for (let point of updatedPoints) {
+        addPoint(point.x, point.y, point.color);
+    }
+    for (let centroid of updatedCentroids) {
+        addCentroid(centroid.x, centroid.y, centroid.color);
+    }
+}
+export function redrawPoint(updatedPoint) {
+    pointsGroup.selectAll("circle[cx='" + updatedPoint.x + "'][cy='" + updatedPoint.y + "']").data([updatedPoint]).attr("fill", (p) => { return p.color; });
+}
+export function redrawCentroids(updatedCentroids) {
+    let centroids = centroidsGroup.selectAll("circle").data(updatedCentroids).enter().append("circle");
+    centroids
+        .transition()
+        .duration(500)
+        .attr("cx", (c) => {
+        return c.x;
+    })
+        .attr("cy", (c) => {
+        return c.y;
+    })
+        .attr("fill", "#0a0d11")
+        .style("stroke-width", 2)
+        .style("stroke", (c) => {
+        return c.color;
+    })
+        .attr("r", 7);
+}
 function addPoint(x, y, color = "white", centroid) {
     pointsData.push({ x: x, y: y, color: color, centroid: centroid });
-    pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
-    let points = pointsGroup.selectAll("circle").data(pointsData);
+    let points = pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
+    ;
     // Draw()
-    points.exit().remove();
     points
         .attr("cx", (p) => {
         return p.x;
@@ -106,7 +119,7 @@ function addPoint(x, y, color = "white", centroid) {
         .attr("fill", (p) => {
         return p.color;
     })
-        .attr("r", 5);
+        .attr("r", 3);
 }
 function addCentroid(x, y, color) {
     if (centroidsData.length >= 10) {
@@ -114,34 +127,24 @@ function addCentroid(x, y, color) {
     }
     else {
         centroidsData.push({ x: x, y: y, color: color });
-        centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");
-        let centroids = centroidsGroup.selectAll("circle").data(centroidsData);
-        // Draw()
-        centroids.exit().remove();
-        centroids
-            .attr("cx", (c) => {
-            return c.x;
-        })
-            .attr("cy", (c) => {
-            return c.y;
-        })
-            .attr("fill", (c) => {
-            return c.color;
-        })
-            .attr("r", 7);
     }
+    let centroids = centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");
+    ;
+    // Draw()
+    centroids
+        .attr("cx", (c) => {
+        return c.x;
+    })
+        .attr("cy", (c) => {
+        return c.y;
+    })
+        .attr("fill", "#0a0d11")
+        .style("stroke-width", 2)
+        .style("stroke", (c) => {
+        return c.color;
+    })
+        .attr("r", 7);
 }
-// export async function drawDistance(a: Vector, b: Vector) {
-//     canvasTemp.style.display = "block";
-//     ctxTemp.beginPath();
-//     ctxTemp.moveTo(a.x, a.y);
-//     ctxTemp.lineTo(b.x, b.y);
-//     ctxTemp.strokeStyle = "rgba(255, 255, 255, 0.3)";
-//     ctxTemp.stroke();
-//     ctxTemp.closePath();
-//     await delay(500);
-//     ctxTemp.clearRect(0, 0, canvasTemp.width, canvasTemp.height);
-// }
 export function pushMessage(mainMessageText, subMessageText) {
     if (mainMessageText != undefined) {
         mainMessage.innerText = mainMessageText;
@@ -149,9 +152,6 @@ export function pushMessage(mainMessageText, subMessageText) {
     if (subMessageText != undefined) {
         subMessage.innerText = subMessageText;
     }
-}
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 export class KMeans {
     constructor(points, centroids) {
@@ -168,21 +168,6 @@ export class KMeans {
                 let distance;
                 let closestCentroid = this.centroids[0]; //Can't assign null/undefined
                 for (let k = 0; k < this.centroids.length; k++) {
-                    // pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
-                    // let points = pointsGroup.selectAll("circle").data(pointsData);
-                    // // Draw
-                    // points.exit().remove();
-                    // points
-                    //     .attr("cx", (p) => {
-                    //         return p.x;
-                    //     })
-                    //     .attr("cy", (p) => {
-                    //         return p.y;
-                    //     })
-                    //     .attr("fill", (p) => {
-                    //         return p.color;
-                    //     })
-                    //     .attr("r", 5);
                     let distanceLine = distancesGroup.selectAll("line").data([this.points[j]]).enter().append("line");
                     // Draw
                     distanceLine
@@ -200,7 +185,7 @@ export class KMeans {
                     })
                         .attr("stroke", "white")
                         .attr("stroke-opacity", 50);
-                    await new Promise(f => setTimeout(f, 500));
+                    await new Promise(f => setTimeout(f, 200));
                     distanceLine.remove();
                     distance = this.calculateDistance(this.points[j], this.centroids[k]);
                     if (distance < minDistance) {
@@ -211,13 +196,29 @@ export class KMeans {
                 this.points[j].centroid = closestCentroid;
                 this.points[j].color = closestCentroid.color;
                 pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
+                redrawPoint(this.points[j]);
             }
             pushMessage("Calculating the means and updating centroids...", undefined);
+            this.updateCentroids();
+            redrawCentroids(this.centroids);
+        }
+    }
+    updateCentroids() {
+        for (let i = 0; i < this.centroids.length; i++) {
+            let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
+            let sumX = 0;
+            let sumY = 0;
+            for (let j = 0; j < clusteteredPoints.length; j++) {
+                sumX += clusteteredPoints[j].x;
+                sumY += clusteteredPoints[j].y;
+            }
+            let newX = sumX / clusteteredPoints.length;
+            let newY = sumY / clusteteredPoints.length;
+            this.centroids[i].x = newX;
+            this.centroids[i].y = newY;
         }
     }
     calculateDistance(a, b) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
-    }
-    draw() {
     }
 }
