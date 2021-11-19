@@ -5,7 +5,7 @@ const WIDTH = 900;
 const HEIGHT = 550;
 
 // Canvas
-const svg = d3.select("#canvas svg").attr("width", WIDTH).attr("height", HEIGHT)
+const svg = d3.select("svg").attr("width", WIDTH).attr("height", HEIGHT)
 
 const distancesGroup = svg.append("g");
 const pointsGroup = svg.append("g");
@@ -58,7 +58,7 @@ createUserEvents();
 function createUserEvents() {
     svg.on("click", function(event, d) {
         console.log(d); 
-        console.log(d3.pointer(event,svg.node));
+        console.log(d3.pointer(event, svg.node));
         pressEventHandler(event);
     });
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));

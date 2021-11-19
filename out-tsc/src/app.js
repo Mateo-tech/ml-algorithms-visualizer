@@ -3,7 +3,7 @@ import * as d3 from "d3";
 const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
-const svg = d3.select("#canvas svg").attr("width", WIDTH).attr("height", HEIGHT);
+const svg = d3.select("svg").attr("width", WIDTH).attr("height", HEIGHT);
 const distancesGroup = svg.append("g");
 const pointsGroup = svg.append("g");
 const centroidsGroup = svg.append("g");

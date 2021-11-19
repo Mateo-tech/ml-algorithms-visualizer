@@ -28,7 +28,7 @@ var d3__namespace = /*#__PURE__*/_interopNamespace(d3);
 const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
-const svg = d3__namespace.select("#canvas svg").attr("width", WIDTH).attr("height", HEIGHT);
+const svg = d3__namespace.select("svg").attr("width", WIDTH).attr("height", HEIGHT);
 const distancesGroup = svg.append("g");
 const pointsGroup = svg.append("g");
 svg.append("g");

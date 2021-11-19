@@ -32,18 +32,7 @@ body {
 }
 
 /* Canvas */
-#graph {
-    width: 900px;
-    height: 550px;
-}
-
-#canvas-main {
-    border: 1px solid rgb(146, 146, 146);
-    position: absolute;
-}
-
-#canvas-temp {
-    display: none;
+#canvas {
 }
 
 /* Menu */
