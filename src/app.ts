@@ -58,7 +58,7 @@ createUserEvents();
 function createUserEvents() {
     svg.on("click", function(event, d) {
         console.log(d); 
-        console.log(d3.pointer(event, svg.node));
+        console.log(d3.pointer(event, svg.node()));
         pressEventHandler(event);
     });
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
@@ -68,15 +68,12 @@ function createUserEvents() {
 
 
 function changeMode(newMode: string) {
-    console.log("lol")
     mode = newMode;
 }
 
 function pressEventHandler(e: MouseEvent) {
-    let x = e.pageX;
-    let y = e.pageY;
-
-    console.log("oi");
+    let x = d3.pointer(e)[0];
+    let y = d3.pointer(e)[1];
 
     switch (mode) {
         case "none": {
@@ -125,10 +122,10 @@ function addPoint(x: number, y: number, color = "white", centroid?: Centroid) {
     points
         .transition()
         .duration(500)
-        .attr("px", (p) => {
+        .attr("cx", (p) => {
             return p.x;
           })
-        .attr("py", (p) => {
+        .attr("cy", (p) => {
             return p.y;
         })
         .attr("fill", (p) => {
