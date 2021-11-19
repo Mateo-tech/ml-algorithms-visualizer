@@ -1,0 +1,83 @@
+/* General */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 200;
+    box-sizing: border-box;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.wrapper {
+    min-height: 100%;
+    background: #0d1117;
+}
+
+
+/* Navbar */
+.navbar {
+    background: #0a0d11;;
+}
+.navbar-nav > li {
+    padding-left: 8px;
+    padding-right: 8px;
+    outline: none;
+    box-shadow: none;
+}
+
+/* Canvas */
+#graph {
+    width: 900px;
+    height: 550px;
+}
+
+#canvas-main {
+    border: 1px solid rgb(146, 146, 146);
+    position: absolute;
+}
+
+#canvas-temp {
+    display: none;
+}
+
+/* Menu */
+.menu {
+    background: #0a0d11;;
+    border-radius: 20px;
+    height: 550px;
+    width: 700px;
+}
+
+.menu > .data-points-menu > button {
+    margin-right: 10px;
+    outline: none;
+    box-shadow: none;
+}
+
+.menu > .centroids-menu > button {
+    margin-right: 10px;
+    outline: none;
+    box-shadow: none;
+}
+
+.menu > .controlls-menu > button {
+    margin-right: 10px;
+    outline: none;
+    box-shadow: none;
+}
+
+#speed-range {
+    width: 500px;
+}
+
+/* Verbose */
+.verbose {
+    background: #0a0d11;;
+    border-radius: 20px;
+}
