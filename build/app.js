@@ -31,7 +31,7 @@ const HEIGHT = 550;
 const svg = d3__namespace.select("svg").attr("width", WIDTH).attr("height", HEIGHT);
 const distancesGroup = svg.append("g");
 const pointsGroup = svg.append("g");
-svg.append("g");
+const centroidsGroup = svg.append("g");
 // Points
 let addPointsManuallyButton = document.getElementById("add-points-manually-btn");
 document.getElementById("add-points-randomly-btn");
@@ -54,6 +54,18 @@ let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
 let centroidsData = [];
 let mode; //"none", "point", "centroid"
+let centroidColors = [
+    '#ED0A3F',
+    '#0095B7',
+    '#33CC99',
+    '#00468C',
+    '#0066FF',
+    '#EE34D2',
+    '#C88A65',
+    '#A50B5E',
+    '#733380',
+    '#87421F'
+];
 createUserEvents();
 function createUserEvents() {
     svg.on("click", function (event, d) {
@@ -71,12 +83,17 @@ function changeMode(newMode) {
 function pressEventHandler(e) {
     let x = d3__namespace.pointer(e)[0];
     let y = d3__namespace.pointer(e)[1];
+    console.log("mode");
     switch (mode) {
         case "none": {
             break;
         }
         case "point": {
             addPoint(x, y);
+            break;
+        }
+        case "centroid": {
+            addCentroid(x, y, centroidColors[centroidsData.length]);
             break;
         }
     }
@@ -104,8 +121,6 @@ function addPoint(x, y, color = "white", centroid) {
     // Draw()
     points.exit().remove();
     points
-        .transition()
-        .duration(500)
         .attr("cx", (p) => {
         return p.x;
     })
@@ -117,20 +132,29 @@ function addPoint(x, y, color = "white", centroid) {
     })
         .attr("r", 5);
 }
-// function addCentroid(x: number, y: number, color: string) {
-//     if (centroids.length >= 10) {
-//         return;
-//     } else {
-//         centroids.push({ x: x, y: y, color: color})
-//         ctxMain.beginPath()
-//         ctxMain.arc(x, y, 7, 0, 2 * Math.PI);
-//         ctxMain.strokeStyle = "white"
-//         ctxMain.fillStyle = color;
-//         ctxMain.fill()
-//         ctxMain.stroke()
-//         ctxMain.closePath()
-//     }
-// }
+function addCentroid(x, y, color) {
+    if (centroidsData.length >= 10) {
+        return;
+    }
+    else {
+        centroidsData.push({ x: x, y: y, color: color });
+        centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");
+        let centroids = centroidsGroup.selectAll("circle").data(centroidsData);
+        // Draw()
+        centroids.exit().remove();
+        centroids
+            .attr("cx", (c) => {
+            return c.x;
+        })
+            .attr("cy", (c) => {
+            return c.y;
+        })
+            .attr("fill", (c) => {
+            return c.color;
+        })
+            .attr("r", 7);
+    }
+}
 // export async function drawDistance(a: Vector, b: Vector) {
 //     canvasTemp.style.display = "block";
 //     ctxTemp.beginPath();

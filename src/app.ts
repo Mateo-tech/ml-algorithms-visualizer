@@ -84,7 +84,7 @@ function pressEventHandler(e: MouseEvent) {
             break;
         }
         case "centroid": {
-            // addCentroid(x, y, centroidColors[centroids.length]);
+            addCentroid(x, y, centroidColors[centroidsData.length]);
             break;
         }
     }
@@ -120,8 +120,6 @@ function addPoint(x: number, y: number, color = "white", centroid?: Centroid) {
     // Draw()
     points.exit().remove();
     points
-        .transition()
-        .duration(500)
         .attr("cx", (p) => {
             return p.x;
           })
@@ -134,21 +132,30 @@ function addPoint(x: number, y: number, color = "white", centroid?: Centroid) {
         .attr("r", 5);
 }
 
-// function addCentroid(x: number, y: number, color: string) {
-//     if (centroids.length >= 10) {
-//         return;
-//     } else {
-//         centroids.push({ x: x, y: y, color: color})
+function addCentroid(x: number, y: number, color: string) {
+    if (centroidsData.length >= 10) {
+        return;
+    } else {
+        centroidsData.push({ x: x, y: y, color: color})
 
-//         ctxMain.beginPath()
-//         ctxMain.arc(x, y, 7, 0, 2 * Math.PI);
-//         ctxMain.strokeStyle = "white"
-//         ctxMain.fillStyle = color;
-//         ctxMain.fill()
-//         ctxMain.stroke()
-//         ctxMain.closePath()
-//     }
-// }
+        centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");
+        let centroids = centroidsGroup.selectAll("circle").data(centroidsData);
+
+    // Draw()
+    centroids.exit().remove();
+    centroids
+        .attr("cx", (c) => {
+            return c.x;
+          })
+        .attr("cy", (c) => {
+            return c.y;
+        })
+        .attr("fill", (c) => {
+            return c.color;
+        })
+        .attr("r", 7);
+    }
+}
 
 // export async function drawDistance(a: Vector, b: Vector) {
 //     canvasTemp.style.display = "block";

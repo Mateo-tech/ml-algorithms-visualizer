@@ -58,6 +58,7 @@ function changeMode(newMode) {
 function pressEventHandler(e) {
     let x = d3.pointer(e)[0];
     let y = d3.pointer(e)[1];
+    console.log("mode");
     switch (mode) {
         case "none": {
             break;
@@ -67,7 +68,7 @@ function pressEventHandler(e) {
             break;
         }
         case "centroid": {
-            // addCentroid(x, y, centroidColors[centroids.length]);
+            addCentroid(x, y, centroidColors[centroidsData.length]);
             break;
         }
     }
@@ -95,8 +96,6 @@ function addPoint(x, y, color = "white", centroid) {
     // Draw()
     points.exit().remove();
     points
-        .transition()
-        .duration(500)
         .attr("cx", (p) => {
         return p.x;
     })
@@ -108,20 +107,29 @@ function addPoint(x, y, color = "white", centroid) {
     })
         .attr("r", 5);
 }
-// function addCentroid(x: number, y: number, color: string) {
-//     if (centroids.length >= 10) {
-//         return;
-//     } else {
-//         centroids.push({ x: x, y: y, color: color})
-//         ctxMain.beginPath()
-//         ctxMain.arc(x, y, 7, 0, 2 * Math.PI);
-//         ctxMain.strokeStyle = "white"
-//         ctxMain.fillStyle = color;
-//         ctxMain.fill()
-//         ctxMain.stroke()
-//         ctxMain.closePath()
-//     }
-// }
+function addCentroid(x, y, color) {
+    if (centroidsData.length >= 10) {
+        return;
+    }
+    else {
+        centroidsData.push({ x: x, y: y, color: color });
+        centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");
+        let centroids = centroidsGroup.selectAll("circle").data(centroidsData);
+        // Draw()
+        centroids.exit().remove();
+        centroids
+            .attr("cx", (c) => {
+            return c.x;
+        })
+            .attr("cy", (c) => {
+            return c.y;
+        })
+            .attr("fill", (c) => {
+            return c.color;
+        })
+            .attr("r", 7);
+    }
+}
 // export async function drawDistance(a: Vector, b: Vector) {
 //     canvasTemp.style.display = "block";
 //     ctxTemp.beginPath();
