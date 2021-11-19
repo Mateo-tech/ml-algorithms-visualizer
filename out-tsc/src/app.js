@@ -43,8 +43,10 @@ let centroidColors = [
 ];
 createUserEvents();
 function createUserEvents() {
-    svg.on("click", (e) => {
-        pressEventHandler(e);
+    svg.on("click", function (event, d) {
+        console.log(d);
+        console.log(d3.pointer(event, svg.node));
+        pressEventHandler(event);
     });
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));

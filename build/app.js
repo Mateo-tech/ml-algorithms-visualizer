@@ -56,8 +56,10 @@ let centroidsData = [];
 let mode; //"none", "point", "centroid"
 createUserEvents();
 function createUserEvents() {
-    svg.on("click", (e) => {
-        pressEventHandler(e);
+    svg.on("click", function (event, d) {
+        console.log(d);
+        console.log(d3__namespace.pointer(event, svg.node));
+        pressEventHandler(event);
     });
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));

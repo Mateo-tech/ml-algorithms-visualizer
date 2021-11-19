@@ -56,8 +56,10 @@ createUserEvents();
 
 
 function createUserEvents() {
-    svg.on("click", (e: MouseEvent) => {
-        pressEventHandler(e);
+    svg.on("click", function(event, d) {
+        console.log(d); 
+        console.log(d3.pointer(event,svg.node));
+        pressEventHandler(event);
     });
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e: Event) => changeMode("centroid"));
