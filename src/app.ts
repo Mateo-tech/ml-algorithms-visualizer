@@ -68,7 +68,8 @@ function createUserEvents() {
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e: Event) => {
         if (kmeans == undefined) {
-            kmeans = new KMeans(pointsData, centroidsData)
+            kmeans = new KMeans(pointsData, centroidsData);
+            kmeans.nextStep();
         } else {
             kmeans.nextStep();
         } 
