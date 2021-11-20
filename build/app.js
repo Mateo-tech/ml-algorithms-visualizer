@@ -72,8 +72,11 @@ function createUserEvents() {
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));
     controllsPlayButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
-    // Pause button
-    controllsStepButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
+    // Pause button goes here
+    controllsStepButton.addEventListener("click", (e) => {
+        new KMeans(pointsData, centroidsData);
+        //kmeans.step();
+    });
 }
 function changeMode(newMode) {
     mode = newMode;
@@ -95,45 +98,34 @@ function pressEventHandler(e) {
         }
     }
 }
-function redraw(updatedPoints, updatedCentroids) {
-    pointsData = [];
+function redrawPoint(updatedPoint) {
+    pointsGroup
+        .selectAll("circle[cx='" + updatedPoint.x + "'][cy='" + updatedPoint.y + "']")
+        .data([updatedPoint])
+        .attr("fill", (p) => { return p.color; });
+}
+function redrawCentroids(updatedCentroids) {
     centroidsData = [];
-    // Remove the white points, guess I could also recolor them but ey
-    pointsGroup.selectAll("circle").data(pointsData).exit().remove();
-    centroidsGroup.selectAll("circle").remove();
-    for (let point of updatedPoints) {
-        addPoint(point.x, point.y, point.color);
-    }
     for (let centroid of updatedCentroids) {
         addCentroid(centroid.x, centroid.y, centroid.color);
     }
-}
-function redrawPoint(updatedPoint) {
-    pointsGroup.selectAll("circle[cx='" + updatedPoint.x + "'][cy='" + updatedPoint.y + "']").data([updatedPoint]).attr("fill", (p) => { return p.color; });
-}
-function redrawCentroids(updatedCentroids) {
-    let centroids = centroidsGroup.selectAll("circle").data(updatedCentroids).enter().append("circle");
-    centroids
+    centroidsGroup
+        .selectAll("circle")
+        .data(updatedCentroids)
+        .enter()
         .transition()
         .duration(500)
-        .attr("cx", (c) => {
-        return c.x;
-    })
-        .attr("cy", (c) => {
-        return c.y;
-    })
-        .attr("fill", "#0a0d11")
-        .style("stroke-width", 2)
-        .style("stroke", (c) => {
-        return c.color;
-    })
-        .attr("r", 7);
+        .attr("transform", (c) => {
+        return `translate(${c.x}, ${c.y})`;
+    });
 }
 function addPoint(x, y, color = "white", centroid) {
     pointsData.push({ x: x, y: y, color: color, centroid: centroid });
-    let points = pointsGroup.selectAll("circle").data(pointsData).enter().append("circle");
-    // Draw()
-    points
+    pointsGroup
+        .selectAll("circle")
+        .data(pointsData)
+        .enter()
+        .append("circle")
         .attr("cx", (p) => {
         return p.x;
     })
@@ -152,9 +144,11 @@ function addCentroid(x, y, color) {
     else {
         centroidsData.push({ x: x, y: y, color: color });
     }
-    let centroids = centroidsGroup.selectAll("circle").data(centroidsData).enter().append("circle");
-    // Draw()
-    centroids
+    centroidsGroup
+        .selectAll("circle")
+        .data(centroidsData)
+        .enter()
+        .append("circle")
         .attr("cx", (c) => {
         return c.x;
     })
@@ -181,7 +175,6 @@ class KMeans {
         this.maxIter = 1;
         this.points = points;
         this.centroids = centroids;
-        this.step();
     }
     async step() {
         for (let i = 0; i < this.maxIter; i++) {
@@ -192,7 +185,6 @@ class KMeans {
                 let closestCentroid = this.centroids[0]; //Can't assign null/undefined
                 for (let k = 0; k < this.centroids.length; k++) {
                     let distanceLine = distancesGroup.selectAll("line").data([this.points[j]]).enter().append("line");
-                    // Draw
                     distanceLine
                         .attr("x1", (d) => {
                         return d.x;
@@ -208,7 +200,7 @@ class KMeans {
                     })
                         .attr("stroke", "white")
                         .attr("stroke-opacity", 50);
-                    await new Promise(f => setTimeout(f, 200));
+                    await new Promise(f => setTimeout(f, 10));
                     distanceLine.remove();
                     distance = this.calculateDistance(this.points[j], this.centroids[k]);
                     if (distance < minDistance) {
@@ -222,21 +214,34 @@ class KMeans {
                 redrawPoint(this.points[j]);
             }
             pushMessage("Calculating the means and updating centroids...", undefined);
+            console.log("FDGDG");
+            console.log("Old centroids:");
+            console.log(this.centroids);
             this.updateCentroids();
-            redrawCentroids(this.centroids);
+            console.log("New centroids:");
+            console.log(this.centroids);
+            //redrawCentroids(this.centroids);
         }
     }
     updateCentroids() {
         for (let i = 0; i < this.centroids.length; i++) {
             let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
+            console.log("Cluster " + i + ":");
+            console.log(clusteteredPoints);
             let sumX = 0;
             let sumY = 0;
             for (let j = 0; j < clusteteredPoints.length; j++) {
                 sumX += clusteteredPoints[j].x;
                 sumY += clusteteredPoints[j].y;
             }
+            console.log("SumX: " + sumX);
+            console.log("SumY: " + sumY);
             let newX = sumX / clusteteredPoints.length;
             let newY = sumY / clusteteredPoints.length;
+            console.log("OldX: " + this.centroids[i].x);
+            console.log("OldY: " + this.centroids[i].y);
+            console.log("NewX: " + newX);
+            console.log("NewY: " + newY);
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }
@@ -248,7 +253,6 @@ class KMeans {
 
 exports.KMeans = KMeans;
 exports.pushMessage = pushMessage;
-exports.redraw = redraw;
 exports.redrawCentroids = redrawCentroids;
 exports.redrawPoint = redrawPoint;
 
