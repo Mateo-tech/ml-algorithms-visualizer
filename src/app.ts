@@ -19,7 +19,7 @@ const centroidsGroup = svg.append("g");
 let addPointsManuallyButton: HTMLButtonElement = document.getElementById("add-points-manually-btn") as HTMLButtonElement;
 let addPointsRandomlyButton: HTMLButtonElement = document.getElementById("add-points-randomly-btn") as HTMLButtonElement;
 let addPointsLoadButtton: HTMLButtonElement = document.getElementById("add-points-load-btn") as HTMLButtonElement;
-let pointsRemoveButton: HTMLButtonElement = document.getElementById("btn btn-danger float-end") as HTMLButtonElement;
+let pointsRemoveButton: HTMLButtonElement = document.getElementById("add-points-remove-btn") as HTMLButtonElement;
 
 // Centroids
 let addCentroidsManuallyButton: HTMLButtonElement = document.getElementById("add-centroids-manually-btn") as HTMLButtonElement;
@@ -56,8 +56,6 @@ let centroidColors: string[] = [
     '#87421F'
 ];
 
-let kmeans: KMeans;
-
 createUserEvents();
 
 function createUserEvents() {
@@ -65,17 +63,16 @@ function createUserEvents() {
 
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
     addPointsRandomlyButton.addEventListener("click", (e: Event) => addPointsRandomly());
+    // Load preset goes here
+    pointsRemoveButton.addEventListener("click", (e: Event) => removeButtons());
 
     addCentroidsManuallyButton.addEventListener("click", (e: Event) => changeMode("centroid"));
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e: Event) => {
-        if (kmeans == undefined) {
-            kmeans = new KMeans(pointsData, centroidsData);
-            kmeans.nextStep();
-        } else {
-            kmeans.nextStep();
-        } 
+        kmeans.setPoints(pointsData);
+        kmeans.setCentroids(centroidsData);
+        kmeans.nextStep();
     });
 }
 
@@ -93,6 +90,12 @@ function addPointsRandomly() {
         let y = Math.floor(Math.random() * HEIGHT);
         addPoint(x, y);
     }
+}
+
+function removeButtons() {
+    pointsData = [];
+    pointsGroup.selectAll("circle").remove();
+    kmeans.removePoints();
 }
 
 function pressEventHandler(e: MouseEvent) {
@@ -247,6 +250,10 @@ export class KMeans {
         //pushMessage("Calculating the means and updating centroids...", undefined);
         //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
 
+        if (this.points.length == 0 || this.centroids.length == 0) {
+            return;
+        }
+
         //TODO Check for max iter
 
         console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
@@ -312,4 +319,22 @@ export class KMeans {
     private calculateDistance(a: Vector, b: Vector) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2))
     }
+
+    public setPoints(points: Point[]) {
+        this.points = points;
+    }
+
+    public setCentroids(centroids: Centroid[]) {
+        this.centroids = centroids;
+    }
+
+    public removePoints() {
+        this.points = [];
+    }
+
+    public removeCentroids() {
+        this.centroids = [];
+    }
 }
+
+let kmeans: KMeans = new KMeans([], []);

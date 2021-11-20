@@ -9,7 +9,7 @@ const centroidsGroup = svg.append("g");
 let addPointsManuallyButton = document.getElementById("add-points-manually-btn");
 let addPointsRandomlyButton = document.getElementById("add-points-randomly-btn");
 let addPointsLoadButtton = document.getElementById("add-points-load-btn");
-let pointsRemoveButton = document.getElementById("btn btn-danger float-end");
+let pointsRemoveButton = document.getElementById("add-points-remove-btn");
 // Centroids
 let addCentroidsManuallyButton = document.getElementById("add-centroids-manually-btn");
 let addCentroidsRandomlyButton = document.getElementById("add-centroids-randomly-btn");
@@ -39,23 +39,20 @@ let centroidColors = [
     '#733380',
     '#87421F'
 ];
-let kmeans;
 createUserEvents();
 function createUserEvents() {
     svg.on("click", (event, d) => pressEventHandler(event));
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
     addPointsRandomlyButton.addEventListener("click", (e) => addPointsRandomly());
+    // Load preset goes here
+    pointsRemoveButton.addEventListener("click", (e) => removeButtons());
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e) => {
-        if (kmeans == undefined) {
-            kmeans = new KMeans(pointsData, centroidsData);
-            kmeans.nextStep();
-        }
-        else {
-            kmeans.nextStep();
-        }
+        kmeans.setPoints(pointsData);
+        kmeans.setCentroids(centroidsData);
+        kmeans.nextStep();
     });
 }
 function changeMode(newMode) {
@@ -70,6 +67,11 @@ function addPointsRandomly() {
         let y = Math.floor(Math.random() * HEIGHT);
         addPoint(x, y);
     }
+}
+function removeButtons() {
+    pointsData = [];
+    pointsGroup.selectAll("circle").remove();
+    kmeans.removePoints();
 }
 function pressEventHandler(e) {
     let x = d3.pointer(e)[0];
@@ -192,6 +194,9 @@ export class KMeans {
         //pushMessage("Checking distances & assigning points to the closest centroid...")
         //pushMessage("Calculating the means and updating centroids...", undefined);
         //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
+        if (this.points.length == 0 || this.centroids.length == 0) {
+            return;
+        }
         //TODO Check for max iter
         console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
         //Drop line if exists
@@ -251,5 +256,18 @@ export class KMeans {
     calculateDistance(a, b) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
     }
+    setPoints(points) {
+        this.points = points;
+    }
+    setCentroids(centroids) {
+        this.centroids = centroids;
+    }
+    removePoints() {
+        this.points = [];
+    }
+    removeCentroids() {
+        this.centroids = [];
+    }
 }
+let kmeans = new KMeans([], []);
 //# sourceMappingURL=app.js.map
