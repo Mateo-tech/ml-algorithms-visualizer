@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
@@ -27,6 +36,7 @@ let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
 let centroidsData = [];
 let mode; //"none", "point", "centroid"
+let pauseButtonPressed = false;
 let centroidColors = [
     '#ED0A3F',
     '#0095B7',
@@ -49,12 +59,18 @@ function createUserEvents() {
     addCentroidsManuallyButton.addEventListener("click", () => changeMode("centroid"));
     addCentroidsRandomlyButton.addEventListener("click", () => addVectorsRandomly(2, 10, "centroid"));
     centroidsRemoveButton.addEventListener("click", () => removeCentroids());
-    //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
-    // Pause button goes here
+    controllsPlayButton.addEventListener("click", () => {
+        kmeans.setPoints(pointsData);
+        kmeans.setCentroids(centroidsData);
+        kmeans.run();
+    });
+    controllsPauseButton.addEventListener("click", () => {
+        pauseButtonPressed = true;
+    });
     controllsStepButton.addEventListener("click", () => {
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
-        kmeans.nextStep();
+        kmeans.step();
     });
 }
 function changeMode(newMode) {
@@ -191,21 +207,35 @@ function isPoint(vector) {
 }
 export class KMeans {
     constructor(points, centroids) {
-        this.maxIter = 1;
+        this.maxIter = 20;
+        this.currentIter = 0;
         this.state = 0;
         this.pointIndex = 0;
         this.centroidIndex = 0;
         this.points = points.map(x => { return Object.assign({}, x); });
         this.centroids = centroids.map(x => { return Object.assign({}, x); });
     }
-    nextStep() {
+    run() {
+        return __awaiter(this, void 0, void 0, function* () {
+            while (!pauseButtonPressed && this.currentIter <= this.maxIter) {
+                if (this.state == 1) {
+                    yield new Promise(f => setTimeout(f, 100));
+                }
+                this.step();
+                //await new Promise(f => setTimeout(f, 1));
+            }
+            if (!pauseButtonPressed) {
+                this.currentIter = 0;
+            }
+        });
+    }
+    step() {
         //pushMessage("Checking distances & assigning points to the closest centroid...")
         //pushMessage("Calculating the means and updating centroids...", undefined);
         //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
         if (this.points.length == 0 || this.centroids.length == 0) {
             return;
         }
-        //TODO Check for max iter
         console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
         //Drop line if exists
         removeLine();
@@ -226,6 +256,7 @@ export class KMeans {
             this.pointIndex = 0;
             this.centroidIndex = 0;
             this.state = 0;
+            this.currentIter++;
         }
         return;
     }

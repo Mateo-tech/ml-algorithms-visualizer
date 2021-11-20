@@ -32,7 +32,7 @@ let controllsPlayButton: HTMLButtonElement = document.getElementById("controlls-
 let controllsPauseButton: HTMLButtonElement = document.getElementById("controlls-pause-btn") as HTMLButtonElement;
 let controllsStepButton: HTMLButtonElement = document.getElementById("controlls-step-btn") as HTMLButtonElement;
 let controllsResetButton: HTMLButtonElement = document.getElementById("controlls-reset-btnn") as HTMLButtonElement;
-let controllsSliderButton: HTMLInputElement = document.getElementById("speed-range-slider") as HTMLInputElement;
+let controllsSlider: HTMLInputElement = document.getElementById("speed-range-slider") as HTMLInputElement;
 
 // Verbose
 let mainMessage: HTMLHeadElement = document.getElementById("message-window-main-message") as HTMLButtonElement;
@@ -42,6 +42,8 @@ let pointsData: Point[] = [];
 let centroidsData: Centroid[] = [];
 
 let mode: string; //"none", "point", "centroid"
+
+let pauseButtonPressed = false;
 
 let centroidColors: string[] = [
     '#ED0A3F',
@@ -70,12 +72,18 @@ function createUserEvents() {
     addCentroidsRandomlyButton.addEventListener("click", () => addVectorsRandomly(2, 10, "centroid"));
     centroidsRemoveButton.addEventListener("click", () => removeCentroids())
 
-    //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
-    // Pause button goes here
+    controllsPlayButton.addEventListener("click", () => {
+        kmeans.setPoints(pointsData);
+        kmeans.setCentroids(centroidsData);
+        kmeans.run();
+    });
+    controllsPauseButton.addEventListener("click", () => {
+        pauseButtonPressed = true;
+    });
     controllsStepButton.addEventListener("click", () => {
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
-        kmeans.nextStep();
+        kmeans.step();
     });
 }
 
@@ -244,9 +252,10 @@ export class KMeans {
     private points: Point[];
     private centroids: Centroid[];
 
-    private maxIter: number = 1;
+    private maxIter: number = 20;
+    private currentIter: number = 0;
     private state: number = 0;
-    
+
     private pointIndex = 0;
     private centroidIndex = 0;
 
@@ -255,7 +264,20 @@ export class KMeans {
         this.centroids = centroids.map(x => { return { ...x } });
     }
 
-    public nextStep() {
+    public async run() {
+        while (!pauseButtonPressed && this.currentIter <= this.maxIter) {
+            if (this.state == 1) {
+                await new Promise(f => setTimeout(f, 100));
+            }
+            this.step();
+            //await new Promise(f => setTimeout(f, 1));
+        }
+        if (!pauseButtonPressed) {
+            this.currentIter = 0;
+        }
+    }
+
+    public step() {
         //pushMessage("Checking distances & assigning points to the closest centroid...")
         //pushMessage("Calculating the means and updating centroids...", undefined);
         //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
@@ -263,8 +285,6 @@ export class KMeans {
         if (this.points.length == 0 || this.centroids.length == 0) {
             return;
         }
-
-        //TODO Check for max iter
 
         console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
 
@@ -287,6 +307,7 @@ export class KMeans {
             this.pointIndex = 0;
             this.centroidIndex = 0;
             this.state = 0;
+            this.currentIter++;
         }
         return;
     }
@@ -296,8 +317,8 @@ export class KMeans {
         // At the start, assing to a "random vector" (not changing the color)
         if (point.centroid == null) {
             point.centroid = centroid;
-        // Check if the centroid is closer & update the color (don't redraw yet)
-        } 
+            // Check if the centroid is closer & update the color (don't redraw yet)
+        }
         if (distance < this.calculateDistance(point, point.centroid)) {
             point.centroid = centroid;
         }
@@ -305,7 +326,7 @@ export class KMeans {
     }
 
     private assignToCentroid(point: Point) {
-        point.color = point.centroid != null ? point.centroid.color : "white"; 
+        point.color = point.centroid != null ? point.centroid.color : "white";
         changePointColor(point);
     }
 
