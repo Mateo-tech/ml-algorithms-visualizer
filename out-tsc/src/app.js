@@ -44,12 +44,14 @@ createUserEvents();
 function createUserEvents() {
     svg.on("click", (event, d) => pressEventHandler(event));
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
+    addPointsRandomlyButton.addEventListener("click", (e) => addPointsRandomly());
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e) => {
         if (kmeans == undefined) {
             kmeans = new KMeans(pointsData, centroidsData);
+            kmeans.nextStep();
         }
         else {
             kmeans.nextStep();
@@ -58,6 +60,16 @@ function createUserEvents() {
 }
 function changeMode(newMode) {
     mode = newMode;
+}
+function addPointsRandomly() {
+    let max = 200;
+    let min = 20;
+    let numOfPoints = Math.floor(Math.random() * (max - min + 1) + min);
+    for (let i = 0; i < numOfPoints; i++) {
+        let x = Math.floor(Math.random() * WIDTH);
+        let y = Math.floor(Math.random() * HEIGHT);
+        addPoint(x, y);
+    }
 }
 function pressEventHandler(e) {
     let x = d3.pointer(e)[0];

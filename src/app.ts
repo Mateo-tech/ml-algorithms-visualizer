@@ -62,7 +62,10 @@ createUserEvents();
 
 function createUserEvents() {
     svg.on("click", (event, d) => pressEventHandler(event));
+
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
+    addPointsRandomlyButton.addEventListener("click", (e: Event) => addPointsRandomly());
+
     addCentroidsManuallyButton.addEventListener("click", (e: Event) => changeMode("centroid"));
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
@@ -79,6 +82,17 @@ function createUserEvents() {
 
 function changeMode(newMode: string) {
     mode = newMode;
+}
+
+function addPointsRandomly() {
+    let max = 200;
+    let min = 20;
+    let numOfPoints = Math.floor(Math.random() * (max - min + 1) + min);
+    for (let i = 0; i < numOfPoints; i++) {
+        let x = Math.floor(Math.random() * WIDTH);
+        let y = Math.floor(Math.random() * HEIGHT);
+        addPoint(x, y);
+    }
 }
 
 function pressEventHandler(e: MouseEvent) {
