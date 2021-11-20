@@ -53,7 +53,7 @@ function createUserEvents() {
     svg.on("click", (event, d) => pressEventHandler(event));
     addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));
-    controllsPlayButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
+    //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e) => {
         let kmeans = new KMeans(pointsData, centroidsData);
@@ -87,18 +87,18 @@ export function redrawPoint(updatedPoint) {
         .attr("fill", (p) => { return p.color; });
 }
 export function redrawCentroids(updatedCentroids) {
-    centroidsData = [];
-    for (let centroid of updatedCentroids) {
-        addCentroid(centroid.x, centroid.y, centroid.color);
-    }
-    centroidsGroup
-        .selectAll("circle")
-        .data(updatedCentroids)
-        .enter()
+    let databoundCentroids = centroidsGroup.selectAll("circle").data(updatedCentroids);
+    ;
+    databoundCentroids.enter().append("circle");
+    databoundCentroids.exit().remove();
+    databoundCentroids
         .transition()
-        .duration(500)
-        .attr("transform", (c) => {
-        return `translate(${c.x}, ${c.y})`;
+        .duration(300)
+        .attr("cx", (c) => {
+        return c.x;
+    })
+        .attr("cy", (c) => {
+        return c.y;
     });
 }
 function addPoint(x, y, color = "white", centroid) {
@@ -155,8 +155,10 @@ export function pushMessage(mainMessageText, subMessageText) {
 export class KMeans {
     constructor(points, centroids) {
         this.maxIter = 1;
-        this.points = points;
-        this.centroids = centroids;
+        this.points = points.map(x => { return Object.assign({}, x); });
+        this.centroids = centroids.map(x => { return Object.assign({}, x); });
+        console.log("OIII");
+        console.log(this.centroids[0] == centroids[0]);
     }
     step() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -183,7 +185,7 @@ export class KMeans {
                         })
                             .attr("stroke", "white")
                             .attr("stroke-opacity", 50);
-                        yield new Promise(f => setTimeout(f, 10));
+                        //await new Promise(f => setTimeout(f, 10));
                         distanceLine.remove();
                         distance = this.calculateDistance(this.points[j], this.centroids[k]);
                         if (distance < minDistance) {
@@ -197,35 +199,25 @@ export class KMeans {
                     redrawPoint(this.points[j]);
                 }
                 pushMessage("Calculating the means and updating centroids...", undefined);
-                console.log("FDGDG");
-                console.log("Old centroids:");
+                console.log("//");
                 console.log(this.centroids);
                 this.updateCentroids();
-                console.log("New centroids:");
                 console.log(this.centroids);
-                //redrawCentroids(this.centroids);
+                redrawCentroids(this.centroids);
             }
         });
     }
     updateCentroids() {
         for (let i = 0; i < this.centroids.length; i++) {
             let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
-            console.log("Cluster " + i + ":");
-            console.log(clusteteredPoints);
             let sumX = 0;
             let sumY = 0;
             for (let j = 0; j < clusteteredPoints.length; j++) {
                 sumX += clusteteredPoints[j].x;
                 sumY += clusteteredPoints[j].y;
             }
-            console.log("SumX: " + sumX);
-            console.log("SumY: " + sumY);
             let newX = sumX / clusteteredPoints.length;
             let newY = sumY / clusteteredPoints.length;
-            console.log("OldX: " + this.centroids[i].x);
-            console.log("OldY: " + this.centroids[i].y);
-            console.log("NewX: " + newX);
-            console.log("NewY: " + newY);
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }
@@ -234,3 +226,4 @@ export class KMeans {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
     }
 }
+//# sourceMappingURL=app.js.map

@@ -2,7 +2,7 @@
 import * as _d3 from "d3";
 
 declare global {
-  const d3: typeof _d3;
+    const d3: typeof _d3;
 }
 
 const WIDTH = 900;
@@ -62,7 +62,7 @@ function createUserEvents() {
     svg.on("click", (event, d) => pressEventHandler(event));
     addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
     addCentroidsManuallyButton.addEventListener("click", (e: Event) => changeMode("centroid"));
-    controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
+    //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e: Event) => {
         let kmeans = new KMeans(pointsData, centroidsData)
@@ -103,20 +103,18 @@ export function redrawPoint(updatedPoint: Point) {
 }
 
 export function redrawCentroids(updatedCentroids: Centroid[]) {
-    centroidsData = []
-    for (let centroid of updatedCentroids) {
-        addCentroid(centroid.x, centroid.y, centroid.color);
-    }
-
-    centroidsGroup
-        .selectAll("circle")
-        .data(updatedCentroids)
-        .enter()
+    let databoundCentroids = centroidsGroup.selectAll("circle").data(updatedCentroids);;
+    databoundCentroids.enter().append("circle");
+    databoundCentroids.exit().remove();
+    databoundCentroids
         .transition()
-        .duration(500)
-        .attr("transform", (c) => {
-            return `translate(${c.x}, ${c.y})`
+        .duration(300)
+        .attr("cx", (c) => {
+        return c.x;
         })
+        .attr("cy", (c) => {
+            return c.y;
+        });     
 }
 
 function addPoint(x: number, y: number, color = "white", centroid?: Centroid) {
@@ -201,8 +199,11 @@ export class KMeans {
     private maxIter: number = 1;
 
     constructor(points: Point[], centroids: Centroid[]) {
-        this.points = points;
-        this.centroids = centroids;
+        this.points = points.map(x => { return {...x} });
+        this.centroids = centroids.map(x => { return {...x} });
+
+        console.log("OIII")
+        console.log(this.centroids[0] == centroids[0]);
     }
 
 
@@ -233,7 +234,7 @@ export class KMeans {
                         .attr("stroke", "white")
                         .attr("stroke-opacity", 50);
 
-                    await new Promise(f => setTimeout(f, 10));
+                    //await new Promise(f => setTimeout(f, 10));
                     distanceLine.remove();
 
                     distance = this.calculateDistance(this.points[j], this.centroids[k]);
@@ -248,38 +249,27 @@ export class KMeans {
                 redrawPoint(this.points[j]);
             }
             pushMessage("Calculating the means and updating centroids...", undefined);
-            console.log("FDGDG");
-            console.log("Old centroids:");
-            console.log(this.centroids);
+            console.log("//")
+            console.log(this.centroids)
+
             this.updateCentroids();
-            console.log("New centroids:");
-            console.log(this.centroids);
-            //redrawCentroids(this.centroids);
+
+            console.log(this.centroids)
+            redrawCentroids(this.centroids);
         }
     }
 
     private updateCentroids() {
         for (let i = 0; i < this.centroids.length; i++) {
             let clusteteredPoints: Point[] = this.points.filter(point => point.centroid === this.centroids[i]);
-            console.log("Cluster " + i + ":");
-            console.log(clusteteredPoints);
             let sumX: number = 0;
             let sumY: number = 0;
             for (let j = 0; j < clusteteredPoints.length; j++) {
                 sumX += clusteteredPoints[j].x;
                 sumY += clusteteredPoints[j].y;
             }
-            console.log("SumX: " + sumX);
-            console.log("SumY: " + sumY);
             let newX: number = sumX / clusteteredPoints.length;
             let newY: number = sumY / clusteteredPoints.length;
-
-            console.log("OldX: " + this.centroids[i].x);
-            console.log("OldY: " + this.centroids[i].y);
-
-            console.log("NewX: " + newX);
-            console.log("NewY: " + newY);
-
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }

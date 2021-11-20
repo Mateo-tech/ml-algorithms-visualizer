@@ -1,34 +1,13 @@
 (function (global, factory) {
-typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
-typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
-(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.d3 = global.d3 || {}, global.d3));
-})(this, (function (exports, d3) { 'use strict';
+typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+typeof define === 'function' && define.amd ? define(['exports'], factory) :
+(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.d3 = global.d3 || {}));
+})(this, (function (exports) { 'use strict';
 
-function _interopNamespace(e) {
-if (e && e.__esModule) return e;
-var n = Object.create(null);
-if (e) {
-Object.keys(e).forEach(function (k) {
-if (k !== 'default') {
-var d = Object.getOwnPropertyDescriptor(e, k);
-Object.defineProperty(n, k, d.get ? d : {
-enumerable: true,
-get: function () { return e[k]; }
-});
-}
-});
-}
-n["default"] = e;
-return Object.freeze(n);
-}
-
-var d3__namespace = /*#__PURE__*/_interopNamespace(d3);
-
-//import { Point, Centroid, KMeans, Vector } from "./algorithms/kmeans.js";
 const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
-const svg = d3__namespace.select("svg").attr("width", WIDTH).attr("height", HEIGHT);
+const svg = d3.select("svg").attr("width", WIDTH).attr("height", HEIGHT);
 const distancesGroup = svg.append("g");
 const pointsGroup = svg.append("g");
 const centroidsGroup = svg.append("g");
@@ -74,16 +53,16 @@ function createUserEvents() {
     controllsPlayButton.addEventListener("click", (e) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e) => {
-        new KMeans(pointsData, centroidsData);
-        //kmeans.step();
+        let kmeans = new KMeans(pointsData, centroidsData);
+        kmeans.step();
     });
 }
 function changeMode(newMode) {
     mode = newMode;
 }
 function pressEventHandler(e) {
-    let x = d3__namespace.pointer(e)[0];
-    let y = d3__namespace.pointer(e)[1];
+    let x = d3.pointer(e)[0];
+    let y = d3.pointer(e)[1];
     switch (mode) {
         case "none": {
             break;
@@ -105,13 +84,14 @@ function redrawPoint(updatedPoint) {
         .attr("fill", (p) => { return p.color; });
 }
 function redrawCentroids(updatedCentroids) {
-    centroidsData = [];
-    for (let centroid of updatedCentroids) {
-        addCentroid(centroid.x, centroid.y, centroid.color);
-    }
+    console.log(centroidsData);
+    console.log(updatedCentroids);
+    console.log(centroidsData == updatedCentroids);
+    console.log(centroidsData === updatedCentroids);
+    centroidsData = updatedCentroids.slice();
     centroidsGroup
         .selectAll("circle")
-        .data(updatedCentroids)
+        .data(centroidsData)
         .enter()
         .transition()
         .duration(500)
@@ -171,12 +151,12 @@ function pushMessage(mainMessageText, subMessageText) {
     }
 }
 class KMeans {
-    constructor(points, centroids) {
+    constructor(drawnPoints, drawnCentroids) {
         this.maxIter = 1;
-        this.points = points;
-        this.centroids = centroids;
+        this.points = drawnPoints.slice();
+        this.centroids = drawnCentroids.slice();
     }
-    async step() {
+    step() {
         for (let i = 0; i < this.maxIter; i++) {
             pushMessage("Checking distances & assigning points to the closest centroid...");
             for (let j = 0; j < this.points.length; j++) {
@@ -200,7 +180,7 @@ class KMeans {
                     })
                         .attr("stroke", "white")
                         .attr("stroke-opacity", 50);
-                    await new Promise(f => setTimeout(f, 10));
+                    //await new Promise(f => setTimeout(f, 10));
                     distanceLine.remove();
                     distance = this.calculateDistance(this.points[j], this.centroids[k]);
                     if (distance < minDistance) {
@@ -214,34 +194,24 @@ class KMeans {
                 redrawPoint(this.points[j]);
             }
             pushMessage("Calculating the means and updating centroids...", undefined);
-            console.log("FDGDG");
-            console.log("Old centroids:");
+            console.log("--");
             console.log(this.centroids);
             this.updateCentroids();
-            console.log("New centroids:");
             console.log(this.centroids);
-            //redrawCentroids(this.centroids);
+            redrawCentroids(this.centroids);
         }
     }
     updateCentroids() {
         for (let i = 0; i < this.centroids.length; i++) {
             let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
-            console.log("Cluster " + i + ":");
-            console.log(clusteteredPoints);
             let sumX = 0;
             let sumY = 0;
             for (let j = 0; j < clusteteredPoints.length; j++) {
                 sumX += clusteteredPoints[j].x;
                 sumY += clusteteredPoints[j].y;
             }
-            console.log("SumX: " + sumX);
-            console.log("SumY: " + sumY);
             let newX = sumX / clusteteredPoints.length;
             let newY = sumY / clusteteredPoints.length;
-            console.log("OldX: " + this.centroids[i].x);
-            console.log("OldY: " + this.centroids[i].y);
-            console.log("NewX: " + newX);
-            console.log("NewY: " + newY);
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }

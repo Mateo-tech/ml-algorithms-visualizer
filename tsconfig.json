@@ -8,8 +8,9 @@
     "strict": true,  
     "esModuleInterop": false,                 
     "outDir": "out-tsc",
-    "rootDir": "./"
+    "rootDir": "./",
+    "sourceMap": true
   }
   ,
-  "include": ["./src/**/*.ts"]
+  "include": ["./src/*.ts"]
 }
