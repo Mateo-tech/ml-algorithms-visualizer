@@ -43,10 +43,11 @@ createUserEvents();
 function createUserEvents() {
     svg.on("click", (event) => pressEventHandler(event));
     addPointsManuallyButton.addEventListener("click", () => changeMode("point"));
-    addPointsRandomlyButton.addEventListener("click", () => addPointsRandomly());
+    addPointsRandomlyButton.addEventListener("click", () => addVectorsRandomly(20, 200, "point"));
     // Load preset goes here
     pointsRemoveButton.addEventListener("click", () => removeButtons());
     addCentroidsManuallyButton.addEventListener("click", () => changeMode("centroid"));
+    addCentroidsRandomlyButton.addEventListener("click", () => addVectorsRandomly(2, 10, "centroid"));
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", () => {
@@ -58,15 +59,14 @@ function createUserEvents() {
 function changeMode(newMode) {
     mode = newMode;
 }
-function addPointsRandomly() {
-    let max = 200;
-    let min = 20;
+function addVectorsRandomly(min, max, type) {
     let numOfPoints = Math.floor(Math.random() * (max - min + 1) + min);
     for (let i = 0; i < numOfPoints; i++) {
         // Don't fuck it up with the naming, we are going wild here
         let x = Math.floor(Math.random() * document.getElementById("canvas").clientWidth);
         let y = Math.floor(Math.random() * document.getElementById("canvas").clientHeight);
-        addPoint(x, y);
+        // Very elegant checking :---) TYPE script
+        type == "point" ? addPoint(x, y) : addCentroid(x, y, centroidColors[centroidsData.length]);
     }
 }
 function removeButtons() {
