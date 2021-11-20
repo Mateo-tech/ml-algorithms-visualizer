@@ -1,12 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
@@ -48,6 +39,7 @@ let centroidColors = [
     '#733380',
     '#87421F'
 ];
+let kmeans;
 createUserEvents();
 function createUserEvents() {
     svg.on("click", (event, d) => pressEventHandler(event));
@@ -56,8 +48,12 @@ function createUserEvents() {
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", (e) => {
-        let kmeans = new KMeans(pointsData, centroidsData);
-        kmeans.step();
+        if (kmeans == undefined) {
+            kmeans = new KMeans(pointsData, centroidsData);
+        }
+        else {
+            kmeans.nextStep();
+        }
     });
 }
 function changeMode(newMode) {
@@ -80,13 +76,57 @@ function pressEventHandler(e) {
         }
     }
 }
-export function redrawPoint(updatedPoint) {
-    pointsGroup
-        .selectAll("circle[cx='" + updatedPoint.x + "'][cy='" + updatedPoint.y + "']")
-        .data([updatedPoint])
-        .attr("fill", (p) => { return p.color; });
+export function drawVector(vector) {
+    let group = isPoint(vector) ? pointsGroup : centroidsGroup;
+    let data = isPoint(vector) ? pointsData : centroidsData;
+    let size = isPoint(vector) ? 3 : 7;
+    let color = isPoint(vector) ? vector.color : "#0a0d11";
+    group
+        .selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", (v) => {
+        return v.x;
+    })
+        .attr("cy", (v) => {
+        return v.y;
+    })
+        .attr("fill", color)
+        .attr("r", size)
+        .style("stroke", (v) => {
+        return v.color;
+    });
 }
-export function redrawCentroids(updatedCentroids) {
+export function changePointColor(point) {
+    pointsGroup
+        .selectAll("circle[cx='" + point.x + "'][cy='" + point.y + "']")
+        .data([point])
+        .attr("fill", (p) => { return p.color; })
+        .style("stroke", "none");
+}
+export function drawLine(x, y) {
+    let line = distancesGroup.selectAll("line").data([x]).enter().append("line");
+    line
+        .attr("x1", (d) => {
+        return d.x;
+    })
+        .attr("y1", (d) => {
+        return d.y;
+    })
+        .attr("x2", () => {
+        return y.x;
+    })
+        .attr("y2", () => {
+        return y.y;
+    })
+        .attr("stroke", "white")
+        .attr("stroke-opacity", 50);
+}
+export function removeLine() {
+    distancesGroup.selectAll("line").remove();
+}
+export function moveCentroids(updatedCentroids) {
     let databoundCentroids = centroidsGroup.selectAll("circle").data(updatedCentroids);
     ;
     databoundCentroids.enter().append("circle");
@@ -101,48 +141,20 @@ export function redrawCentroids(updatedCentroids) {
         return c.y;
     });
 }
-function addPoint(x, y, color = "white", centroid) {
-    pointsData.push({ x: x, y: y, color: color, centroid: centroid });
-    pointsGroup
-        .selectAll("circle")
-        .data(pointsData)
-        .enter()
-        .append("circle")
-        .attr("cx", (p) => {
-        return p.x;
-    })
-        .attr("cy", (p) => {
-        return p.y;
-    })
-        .attr("fill", (p) => {
-        return p.color;
-    })
-        .attr("r", 3);
+function addPoint(x, y, color = "white", centroid = null) {
+    let point = { x: x, y: y, color: color, centroid: centroid };
+    pointsData.push(point);
+    drawVector(point);
 }
 function addCentroid(x, y, color) {
+    let centroid = { x: x, y: y, color: color };
     if (centroidsData.length >= 10) {
         return;
     }
     else {
-        centroidsData.push({ x: x, y: y, color: color });
+        centroidsData.push(centroid);
+        drawVector(centroid);
     }
-    centroidsGroup
-        .selectAll("circle")
-        .data(centroidsData)
-        .enter()
-        .append("circle")
-        .attr("cx", (c) => {
-        return c.x;
-    })
-        .attr("cy", (c) => {
-        return c.y;
-    })
-        .attr("fill", "#0a0d11")
-        .style("stroke-width", 2)
-        .style("stroke", (c) => {
-        return c.color;
-    })
-        .attr("r", 7);
 }
 export function pushMessage(mainMessageText, subMessageText) {
     if (mainMessageText != undefined) {
@@ -152,60 +164,61 @@ export function pushMessage(mainMessageText, subMessageText) {
         subMessage.innerText = subMessageText;
     }
 }
+function isPoint(vector) {
+    return vector.centroid !== undefined;
+}
 export class KMeans {
     constructor(points, centroids) {
         this.maxIter = 1;
+        this.state = 0;
+        this.pointIndex = 0;
+        this.centroidIndex = 0;
         this.points = points.map(x => { return Object.assign({}, x); });
         this.centroids = centroids.map(x => { return Object.assign({}, x); });
-        console.log("OIII");
-        console.log(this.centroids[0] == centroids[0]);
     }
-    step() {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (let i = 0; i < this.maxIter; i++) {
-                pushMessage("Checking distances & assigning points to the closest centroid...");
-                for (let j = 0; j < this.points.length; j++) {
-                    let minDistance = Infinity;
-                    let distance;
-                    let closestCentroid = this.centroids[0]; //Can't assign null/undefined
-                    for (let k = 0; k < this.centroids.length; k++) {
-                        let distanceLine = distancesGroup.selectAll("line").data([this.points[j]]).enter().append("line");
-                        distanceLine
-                            .attr("x1", (d) => {
-                            return d.x;
-                        })
-                            .attr("y1", (d) => {
-                            return d.y;
-                        })
-                            .attr("x2", () => {
-                            return this.centroids[k].x;
-                        })
-                            .attr("y2", () => {
-                            return this.centroids[k].y;
-                        })
-                            .attr("stroke", "white")
-                            .attr("stroke-opacity", 50);
-                        //await new Promise(f => setTimeout(f, 10));
-                        distanceLine.remove();
-                        distance = this.calculateDistance(this.points[j], this.centroids[k]);
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                            closestCentroid = this.centroids[k];
-                        }
-                    }
-                    this.points[j].centroid = closestCentroid;
-                    this.points[j].color = closestCentroid.color;
-                    pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
-                    redrawPoint(this.points[j]);
-                }
-                pushMessage("Calculating the means and updating centroids...", undefined);
-                console.log("//");
-                console.log(this.centroids);
-                this.updateCentroids();
-                console.log(this.centroids);
-                redrawCentroids(this.centroids);
+    nextStep() {
+        //pushMessage("Checking distances & assigning points to the closest centroid...")
+        //pushMessage("Calculating the means and updating centroids...", undefined);
+        //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
+        //TODO Check for max iter
+        console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
+        //Drop line if exists
+        removeLine();
+        if (this.state == 0) {
+            this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
+            if (this.centroidIndex + 1 == this.centroids.length) {
+                this.assignToCentroid(this.points[this.pointIndex]);
+                this.pointIndex++;
+                this.centroidIndex = -1;
             }
-        });
+            if (this.pointIndex == this.points.length) {
+                this.state = 1;
+            }
+            this.centroidIndex++;
+        }
+        else if (this.state == 1) {
+            this.updateCentroids();
+            this.pointIndex = 0;
+            this.centroidIndex = 0;
+            this.state = 0;
+        }
+        return;
+    }
+    checkDistance(point, centroid) {
+        let distance = this.calculateDistance(point, centroid);
+        // At the start, assing to a "random vector" (not changing the color)
+        if (point.centroid == null) {
+            point.centroid = centroid;
+            // Check if the centroid is closer & update the color (don't redraw yet)
+        }
+        if (distance < this.calculateDistance(point, point.centroid)) {
+            point.centroid = centroid;
+        }
+        drawLine(point, centroid);
+    }
+    assignToCentroid(point) {
+        point.color = point.centroid != null ? point.centroid.color : "white";
+        changePointColor(point);
     }
     updateCentroids() {
         for (let i = 0; i < this.centroids.length; i++) {
@@ -221,6 +234,7 @@ export class KMeans {
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }
+        moveCentroids(this.centroids);
     }
     calculateDistance(a, b) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
