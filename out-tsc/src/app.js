@@ -45,9 +45,10 @@ function createUserEvents() {
     addPointsManuallyButton.addEventListener("click", () => changeMode("point"));
     addPointsRandomlyButton.addEventListener("click", () => addVectorsRandomly(20, 200, "point"));
     // Load preset goes here
-    pointsRemoveButton.addEventListener("click", () => removeButtons());
+    pointsRemoveButton.addEventListener("click", () => removePoints());
     addCentroidsManuallyButton.addEventListener("click", () => changeMode("centroid"));
     addCentroidsRandomlyButton.addEventListener("click", () => addVectorsRandomly(2, 10, "centroid"));
+    centroidsRemoveButton.addEventListener("click", () => removeCentroids());
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
     controllsStepButton.addEventListener("click", () => {
@@ -69,9 +70,14 @@ function addVectorsRandomly(min, max, type) {
         type == "point" ? addPoint(x, y) : addCentroid(x, y, centroidColors[centroidsData.length]);
     }
 }
-function removeButtons() {
+function removePoints() {
     pointsData = [];
     pointsGroup.selectAll("circle").remove();
+    kmeans.removePoints();
+}
+function removeCentroids() {
+    centroidsData = [];
+    centroidsGroup.selectAll("circle").remove();
     kmeans.removePoints();
 }
 function pressEventHandler(e) {
