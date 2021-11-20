@@ -59,23 +59,22 @@ let centroidColors: string[] = [
 createUserEvents();
 
 function createUserEvents() {
-    svg.on("click", (event, d) => pressEventHandler(event));
+    svg.on("click", (event) => pressEventHandler(event));
 
-    addPointsManuallyButton.addEventListener("click", (e: Event) => changeMode("point"));
-    addPointsRandomlyButton.addEventListener("click", (e: Event) => addPointsRandomly());
+    addPointsManuallyButton.addEventListener("click", () => changeMode("point"));
+    addPointsRandomlyButton.addEventListener("click", () => addPointsRandomly());
     // Load preset goes here
-    pointsRemoveButton.addEventListener("click", (e: Event) => removeButtons());
+    pointsRemoveButton.addEventListener("click", () => removeButtons());
 
-    addCentroidsManuallyButton.addEventListener("click", (e: Event) => changeMode("centroid"));
+    addCentroidsManuallyButton.addEventListener("click", () => changeMode("centroid"));
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
-    controllsStepButton.addEventListener("click", (e: Event) => {
+    controllsStepButton.addEventListener("click", () => {
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
         kmeans.nextStep();
     });
 }
-
 
 function changeMode(newMode: string) {
     mode = newMode;
@@ -86,8 +85,9 @@ function addPointsRandomly() {
     let min = 20;
     let numOfPoints = Math.floor(Math.random() * (max - min + 1) + min);
     for (let i = 0; i < numOfPoints; i++) {
-        let x = Math.floor(Math.random() * WIDTH);
-        let y = Math.floor(Math.random() * HEIGHT);
+        // Don't fuck it up with the naming, we are going wild here
+        let x = Math.floor(Math.random() * document.getElementById("canvas")!.clientWidth);
+        let y = Math.floor(Math.random() * document.getElementById("canvas")!.clientHeight);
         addPoint(x, y);
     }
 }
@@ -101,6 +101,8 @@ function removeButtons() {
 function pressEventHandler(e: MouseEvent) {
     let x = d3.pointer(e)[0];
     let y = d3.pointer(e)[1];
+
+    console.log(x + ", " + y);
 
     switch (mode) {
         case "none": {

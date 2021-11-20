@@ -41,15 +41,15 @@ let centroidColors = [
 ];
 createUserEvents();
 function createUserEvents() {
-    svg.on("click", (event, d) => pressEventHandler(event));
-    addPointsManuallyButton.addEventListener("click", (e) => changeMode("point"));
-    addPointsRandomlyButton.addEventListener("click", (e) => addPointsRandomly());
+    svg.on("click", (event) => pressEventHandler(event));
+    addPointsManuallyButton.addEventListener("click", () => changeMode("point"));
+    addPointsRandomlyButton.addEventListener("click", () => addPointsRandomly());
     // Load preset goes here
-    pointsRemoveButton.addEventListener("click", (e) => removeButtons());
-    addCentroidsManuallyButton.addEventListener("click", (e) => changeMode("centroid"));
+    pointsRemoveButton.addEventListener("click", () => removeButtons());
+    addCentroidsManuallyButton.addEventListener("click", () => changeMode("centroid"));
     //controllsPlayButton.addEventListener("click", (e: Event) => new KMeans(pointsData, centroidsData));
     // Pause button goes here
-    controllsStepButton.addEventListener("click", (e) => {
+    controllsStepButton.addEventListener("click", () => {
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
         kmeans.nextStep();
@@ -63,8 +63,9 @@ function addPointsRandomly() {
     let min = 20;
     let numOfPoints = Math.floor(Math.random() * (max - min + 1) + min);
     for (let i = 0; i < numOfPoints; i++) {
-        let x = Math.floor(Math.random() * WIDTH);
-        let y = Math.floor(Math.random() * HEIGHT);
+        // Don't fuck it up with the naming, we are going wild here
+        let x = Math.floor(Math.random() * document.getElementById("canvas").clientWidth);
+        let y = Math.floor(Math.random() * document.getElementById("canvas").clientHeight);
         addPoint(x, y);
     }
 }
@@ -76,6 +77,7 @@ function removeButtons() {
 function pressEventHandler(e) {
     let x = d3.pointer(e)[0];
     let y = d3.pointer(e)[1];
+    console.log(x + ", " + y);
     switch (mode) {
         case "none": {
             break;
