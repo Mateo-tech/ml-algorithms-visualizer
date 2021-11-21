@@ -7,6 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { KMeans, isPoint } from "./algorithms/kmeans.js";
+import { convexhull } from "./utils/convexHull.js";
 const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
@@ -37,8 +39,8 @@ let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
 let centroidsData = [];
 let mode; //"none", "point", "centroid"
-let playing = false;
-let animationSpeed = controllsSlider.valueAsNumber;
+export let playing = false;
+export let animationSpeed = controllsSlider.valueAsNumber;
 let centroidColors = [
     '#ED0A3F',
     '#0095B7',
@@ -274,176 +276,5 @@ export function pushMessage(mainMessageText, subMessageText) {
         subMessage.innerText = subMessageText;
     }
 }
-function isPoint(vector) {
-    return vector.centroid !== undefined;
-}
-export class KMeans {
-    constructor(points, centroids) {
-        this.maxIter = 5;
-        this.currentIter = 0;
-        this.state = 0;
-        this.pointIndex = 0;
-        this.centroidIndex = 0;
-        this.points = points.map(x => { return Object.assign({}, x); });
-        this.centroids = centroids.map(x => { return Object.assign({}, x); });
-    }
-    run() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.points.length == 0 || this.centroids.length == 0) {
-                return;
-            }
-            while (playing && this.currentIter <= this.maxIter) {
-                this.step();
-                yield new Promise(f => setTimeout(f, 1000 - animationSpeed));
-            }
-        });
-    }
-    step() {
-        //pushMessage("Checking distances & assigning points to the closest centroid...")
-        //pushMessage("Calculating the means and updating centroids...", undefined);
-        //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
-        if (this.points.length == 0 || this.centroids.length == 0) {
-            return;
-        }
-        //console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
-        //Drop line if exists
-        removeLine();
-        // Measuring distances and assigning to centroids
-        if (this.state == 0) {
-            this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
-            if (this.centroidIndex + 1 == this.centroids.length) {
-                this.assignToCentroid(this.points[this.pointIndex]);
-                this.pointIndex++;
-                this.centroidIndex = -1;
-            }
-            if (this.pointIndex == this.points.length) {
-                this.state = 1;
-            }
-            this.centroidIndex++;
-            // Moving centroids (=> One full iteration)
-        }
-        else if (this.state == 1) {
-            this.updateCentroids();
-            this.pointIndex = 0;
-            this.centroidIndex = 0;
-            this.state = 0;
-            this.currentIter++;
-        }
-        return;
-    }
-    checkDistance(point, centroid) {
-        let distance = this.calculateDistance(point, centroid);
-        // At the start, assing to a "random vector" (not changing the color)
-        if (point.centroid == null) {
-            point.centroid = centroid;
-            // Check if the centroid is closer & update the color (don't redraw yet)
-        }
-        if (distance < this.calculateDistance(point, point.centroid)) {
-            point.centroid = centroid;
-        }
-        drawLine(point, centroid);
-    }
-    assignToCentroid(point) {
-        point.color = point.centroid != null ? point.centroid.color : "white";
-        changePointColor(point);
-    }
-    updateCentroids() {
-        for (let i = 0; i < this.centroids.length; i++) {
-            let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
-            let sumX = 0;
-            let sumY = 0;
-            for (let j = 0; j < clusteteredPoints.length; j++) {
-                sumX += clusteteredPoints[j].x;
-                sumY += clusteteredPoints[j].y;
-            }
-            let newX = sumX / clusteteredPoints.length;
-            let newY = sumY / clusteteredPoints.length;
-            this.centroids[i].x = newX;
-            this.centroids[i].y = newY;
-        }
-        moveCentroids(this.centroids);
-    }
-    calculateDistance(a, b) {
-        return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
-    }
-    setPoints(points) {
-        this.points = points;
-    }
-    setCentroids(centroids) {
-        this.centroids = centroids;
-    }
-    removePoints() {
-        this.points = [];
-    }
-    removeCentroids() {
-        this.centroids = [];
-    }
-}
 let kmeans = new KMeans([], []);
-var convexhull;
-(function (convexhull) {
-    // Returns a new array of points representing the convex hull of
-    // the given set of points. The convex hull excludes collinear points.
-    // This algorithm runs in O(n log n) time.
-    function makeHull(points) {
-        let newPoints = points.slice();
-        newPoints.sort(convexhull.POINT_COMPARATOR);
-        return convexhull.makeHullPresorted(newPoints);
-    }
-    convexhull.makeHull = makeHull;
-    // Returns the convex hull, assuming that each points[i] <= points[i + 1]. Runs in O(n) time.
-    function makeHullPresorted(points) {
-        if (points.length <= 1)
-            return points.slice();
-        // Andrew's monotone chain algorithm. Positive y coordinates correspond to "up"
-        // as per the mathematical convention, instead of "down" as per the computer
-        // graphics convention. This doesn't affect the correctness of the result.
-        let upperHull = [];
-        for (let i = 0; i < points.length; i++) {
-            const p = points[i];
-            while (upperHull.length >= 2) {
-                const q = upperHull[upperHull.length - 1];
-                const r = upperHull[upperHull.length - 2];
-                if ((q.x - r.x) * (p.y - r.y) >= (q.y - r.y) * (p.x - r.x))
-                    upperHull.pop();
-                else
-                    break;
-            }
-            upperHull.push(p);
-        }
-        upperHull.pop();
-        let lowerHull = [];
-        for (let i = points.length - 1; i >= 0; i--) {
-            const p = points[i];
-            while (lowerHull.length >= 2) {
-                const q = lowerHull[lowerHull.length - 1];
-                const r = lowerHull[lowerHull.length - 2];
-                if ((q.x - r.x) * (p.y - r.y) >= (q.y - r.y) * (p.x - r.x))
-                    lowerHull.pop();
-                else
-                    break;
-            }
-            lowerHull.push(p);
-        }
-        lowerHull.pop();
-        if (upperHull.length == 1 && lowerHull.length == 1 && upperHull[0].x == lowerHull[0].x && upperHull[0].y == lowerHull[0].y)
-            return upperHull;
-        else
-            return upperHull.concat(lowerHull);
-    }
-    convexhull.makeHullPresorted = makeHullPresorted;
-    function POINT_COMPARATOR(a, b) {
-        if (a.x < b.x)
-            return -1;
-        else if (a.x > b.x)
-            return +1;
-        else if (a.y < b.y)
-            return -1;
-        else if (a.y > b.y)
-            return +1;
-        else
-            return 0;
-    }
-    convexhull.POINT_COMPARATOR = POINT_COMPARATOR;
-})(convexhull || (convexhull = {}));
 //# sourceMappingURL=app.js.map
