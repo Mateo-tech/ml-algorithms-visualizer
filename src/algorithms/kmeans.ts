@@ -48,9 +48,6 @@ export class KMeans {
     }
 
     public async step() {
-        //
-        //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
-
         if (this.points.length == 0 || this.centroids.length == 0) {
             return;
         }

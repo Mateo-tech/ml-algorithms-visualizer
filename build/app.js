@@ -31,44 +31,56 @@ class KMeans {
             if (this.points.length == 0 || this.centroids.length == 0) {
                 return;
             }
-            while (exports.playing && this.currentIter <= this.maxIter) {
-                this.step();
-                yield new Promise(f => setTimeout(f, 1000 - exports.animationSpeed));
+            while (exports.playing) {
+                yield this.step();
+                if (exports.showDistanceLines) {
+                    yield new Promise(f => setTimeout(f, 1000 - exports.animationSpeed + 1));
+                }
             }
         });
     }
     step() {
-        //pushMessage("Checking distances & assigning points to the closest centroid...")
-        //pushMessage("Calculating the means and updating centroids...", undefined);
-        //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
-        if (this.points.length == 0 || this.centroids.length == 0) {
+        return __awaiter$1(this, void 0, void 0, function* () {
+            //
+            //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
+            if (this.points.length == 0 || this.centroids.length == 0) {
+                return;
+            }
+            if (this.currentIter >= this.maxIter) {
+                showClusters(this.points, this.centroids);
+                return;
+            }
+            //Drop line if exists
+            removeLine();
+            // Measuring distances and assigning to centroids
+            if (this.state == 0) {
+                pushMessage(this.currentIter + 1, "Checking distances & assigning points to the closest centroid...", undefined);
+                this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
+                if (this.centroidIndex + 1 == this.centroids.length) {
+                    this.assignToCentroid(this.points[this.pointIndex]);
+                    this.pointIndex++;
+                    this.centroidIndex = -1;
+                }
+                if (this.pointIndex == this.points.length) {
+                    this.state = 1;
+                }
+                this.centroidIndex++;
+                // Moving centroids (=> One full iteration)
+            }
+            else if (this.state == 1) {
+                pushMessage(this.currentIter + 1, "Calculating the means and updating centroids...", "");
+                this.updateCentroids();
+                this.pointIndex = 0;
+                this.centroidIndex = 0;
+                this.state = 0;
+                this.currentIter++;
+                // TODO Move this
+                if (exports.playing) {
+                    yield new Promise(f => setTimeout(f, 300));
+                }
+            }
             return;
-        }
-        //console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
-        //Drop line if exists
-        removeLine();
-        // Measuring distances and assigning to centroids
-        if (this.state == 0) {
-            this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
-            if (this.centroidIndex + 1 == this.centroids.length) {
-                this.assignToCentroid(this.points[this.pointIndex]);
-                this.pointIndex++;
-                this.centroidIndex = -1;
-            }
-            if (this.pointIndex == this.points.length) {
-                this.state = 1;
-            }
-            this.centroidIndex++;
-            // Moving centroids (=> One full iteration)
-        }
-        else if (this.state == 1) {
-            this.updateCentroids();
-            this.pointIndex = 0;
-            this.centroidIndex = 0;
-            this.state = 0;
-            this.currentIter++;
-        }
-        return;
+        });
     }
     checkDistance(point, centroid) {
         let distance = this.calculateDistance(point, centroid);
@@ -80,36 +92,42 @@ class KMeans {
         if (distance < this.calculateDistance(point, point.centroid)) {
             point.centroid = centroid;
         }
-        drawLine(point, centroid);
+        if (exports.showDistanceLines) {
+            drawLine(point, centroid);
+        }
     }
     assignToCentroid(point) {
+        var _a, _b;
         point.color = point.centroid != null ? point.centroid.color : "white";
+        pushMessage(this.currentIter + 1, undefined, "Point (" + point.x + ", " + point.y + ") assigned to centroid (" + ((_a = point.centroid) === null || _a === void 0 ? void 0 : _a.x) + ", " + ((_b = point.centroid) === null || _b === void 0 ? void 0 : _b.y) + ")" + "    ▇".fontcolor(point.color));
         changePointColor(point);
     }
     updateCentroids() {
-        for (let i = 0; i < this.centroids.length; i++) {
-            let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
-            let sumX = 0;
-            let sumY = 0;
-            for (let j = 0; j < clusteteredPoints.length; j++) {
-                sumX += clusteteredPoints[j].x;
-                sumY += clusteteredPoints[j].y;
+        return __awaiter$1(this, void 0, void 0, function* () {
+            for (let i = 0; i < this.centroids.length; i++) {
+                let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
+                let sumX = 0;
+                let sumY = 0;
+                for (let j = 0; j < clusteteredPoints.length; j++) {
+                    sumX += clusteteredPoints[j].x;
+                    sumY += clusteteredPoints[j].y;
+                }
+                let newX = Math.floor(sumX / clusteteredPoints.length);
+                let newY = Math.floor(sumY / clusteteredPoints.length);
+                this.centroids[i].x = newX;
+                this.centroids[i].y = newY;
             }
-            let newX = sumX / clusteteredPoints.length;
-            let newY = sumY / clusteteredPoints.length;
-            this.centroids[i].x = newX;
-            this.centroids[i].y = newY;
-        }
-        moveCentroids(this.centroids);
+            moveCentroids(this.centroids);
+        });
     }
     calculateDistance(a, b) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
     }
     setPoints(points) {
-        this.points = points;
+        this.points = points.map(x => { return Object.assign({}, x); });
     }
     setCentroids(centroids) {
-        this.centroids = centroids;
+        this.centroids = centroids.map(x => { return Object.assign({}, x); });
     }
     removePoints() {
         this.points = [];
@@ -239,24 +257,30 @@ let controllsPauseButton = document.getElementById("controlls-pause-btn");
 let controllsStepButton = document.getElementById("controlls-step-btn");
 let controllsResetButton = document.getElementById("controlls-reset-btn");
 let controllsSlider = document.getElementById("speed-range-slider");
+let controllsDistanceLinesCheckbox = document.getElementById("distance-lines-checkbox");
 // Verbose
+let iteration = document.getElementById("message-window-iteration");
 let mainMessage = document.getElementById("message-window-main-message");
 let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
 let centroidsData = [];
-let mode; //"none", "point", "centroid"
+let pointsCheckpoint = [];
+let centroidsCheckpoint = [];
+let firstRun = true;
+exports.showDistanceLines = true;
+let mode = "point"; //"none", "point", "centroid"
 exports.playing = false;
 exports.animationSpeed = controllsSlider.valueAsNumber;
 let centroidColors = [
     '#ED0A3F',
     '#0095B7',
     '#33CC99',
-    '#00468C',
+    '#cc5454',
     '#0066FF',
     '#EE34D2',
     '#C88A65',
     '#A50B5E',
-    '#733380',
+    '#e9dc64',
     '#87421F'
 ];
 createUserEvents();
@@ -283,9 +307,15 @@ function createUserEvents() {
         if (pointsData.length == 0 || centroidColors.length == 0) {
             return;
         }
+        if (firstRun) {
+            firstRun = false;
+            pointsCheckpoint = pointsData.map(x => { return Object.assign({}, x); });
+            centroidsCheckpoint = centroidsData.map(x => { return Object.assign({}, x); });
+        }
         disableButton(controllsPlayButton);
         disableButton(controllsStepButton);
         enableButton(controllsPauseButton);
+        enableButton(controllsResetButton);
         exports.playing = true;
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
@@ -305,36 +335,56 @@ function createUserEvents() {
     controllsSlider.addEventListener("input", (e) => {
         exports.animationSpeed = e.target.valueAsNumber;
     });
-    controllsResetButton.addEventListener("click", (e) => {
-        let polygons = [];
-        for (let i = 0; i < centroidsData.length; i++) {
-            let testCluster = pointsData.filter(point => point.centroid === centroidsData[i]);
-            let hull = convexhull.makeHull(testCluster);
-            polygons.push(hull);
+    controllsResetButton.addEventListener("click", () => {
+        exports.playing = false;
+        disableButton(controllsPauseButton);
+        enableButton(controllsStepButton);
+        enableButton(controllsPlayButton);
+        distancesGroup.selectAll("line").remove();
+        clustersGroup.selectAll("polygon").remove();
+        for (let i = 0; i < pointsCheckpoint.length; i++) {
+            pointsCheckpoint[i].color = "white";
+            changePointColor(pointsCheckpoint[i]);
         }
-        clustersGroup
-            .selectAll("polygon")
-            .data(polygons)
-            .enter()
-            .append("polygon")
-            .attr("points", function (d) {
-            return d.map(function (d) {
-                return [d.x, d.y].join(", ");
-            }).join(" ");
-        })
-            .attr("stroke", function (d) {
-            return d.map(function (d) {
-                return d.color;
-            })[0];
-        })
-            .attr("fill", function (d) {
-            return d.map(function (d) {
-                return d.color;
-            })[0];
-        })
-            .attr("fill-opacity", "0.05")
-            .attr("stroke-width", 1);
+        moveCentroids(centroidsCheckpoint);
+        kmeans = new KMeans(pointsCheckpoint, centroidsCheckpoint);
     });
+    controllsDistanceLinesCheckbox.addEventListener("change", () => {
+        exports.showDistanceLines = !exports.showDistanceLines;
+    });
+}
+// TODO Don't pass the data from kmeans
+function showClusters(points, centroids) {
+    // TODO Temp solution
+    exports.playing = false;
+    let polygons = [];
+    for (let i = 0; i < centroids.length; i++) {
+        let cluster = points.filter(point => point.centroid === centroids[i]);
+        let hull = convexhull.makeHull(cluster);
+        polygons.push(hull);
+    }
+    clustersGroup
+        .selectAll("polygon")
+        .data(polygons)
+        .enter()
+        .append("polygon")
+        .attr("points", function (d) {
+        return d.map(function (d) {
+            return [d.x, d.y].join(", ");
+        }).join(" ");
+    })
+        .attr("stroke", function (d) {
+        return d.map(function (d) {
+            return d.color;
+        })[0];
+    })
+        .attr("fill", function (d) {
+        return d.map(function (d) {
+            return d.color;
+        })[0];
+    })
+        .attr("fill-opacity", "0.05")
+        .attr("stroke-width", 1);
 }
 function enableButton(button) {
     button.classList.remove("disabled", "btn-secondary");
@@ -361,18 +411,19 @@ function removePoints() {
     pointsData = [];
     pointsGroup.selectAll("circle").remove();
     distancesGroup.selectAll("line").remove();
+    clustersGroup.selectAll("polygon").remove();
     kmeans.removePoints();
 }
 function removeCentroids() {
     centroidsData = [];
     centroidsGroup.selectAll("circle").remove();
     distancesGroup.selectAll("line").remove();
-    kmeans.removePoints();
+    clustersGroup.selectAll("polygon").remove();
+    kmeans.removeCentroids();
 }
 function pressEventHandler(e) {
     let x = d3.pointer(e)[0];
     let y = d3.pointer(e)[1];
-    console.log(x + ", " + y);
     switch (mode) {
         case "none": {
             break;
@@ -449,7 +500,7 @@ function moveCentroids(updatedCentroids) {
         databoundCentroids.exit().remove();
         databoundCentroids
             .transition()
-            .duration(500)
+            .duration(300)
             .attr("cx", (c) => {
             return c.x;
         })
@@ -459,6 +510,9 @@ function moveCentroids(updatedCentroids) {
     });
 }
 function addPoint(x, y, color = "white", centroid = null) {
+    if (pointsData.length >= 1000) {
+        return;
+    }
     let point = { x: x, y: y, color: color, centroid: centroid };
     pointsData.push(point);
     drawVector(point);
@@ -473,12 +527,15 @@ function addCentroid(x, y, color) {
         drawVector(centroid);
     }
 }
-function pushMessage(mainMessageText, subMessageText) {
+function pushMessage(iterationNumber, mainMessageText, subMessageText) {
+    if (iterationNumber) {
+        iteration.innerText = "Iteration " + iterationNumber.toString();
+    }
     if (mainMessageText != undefined) {
         mainMessage.innerText = mainMessageText;
     }
     if (subMessageText != undefined) {
-        subMessage.innerText = subMessageText;
+        subMessage.innerHTML = subMessageText;
     }
 }
 let kmeans = new KMeans([], []);
@@ -489,6 +546,7 @@ exports.drawVector = drawVector;
 exports.moveCentroids = moveCentroids;
 exports.pushMessage = pushMessage;
 exports.removeLine = removeLine;
+exports.showClusters = showClusters;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

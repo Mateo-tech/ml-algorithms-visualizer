@@ -37,8 +37,6 @@ export class KMeans {
     }
     step() {
         return __awaiter(this, void 0, void 0, function* () {
-            //
-            //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
             if (this.points.length == 0 || this.centroids.length == 0) {
                 return;
             }

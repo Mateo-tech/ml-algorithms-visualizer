@@ -103,14 +103,14 @@ function createUserEvents() {
             firstRun = false;
             pointsCheckpoint = pointsData.map(x => { return { ...x } });
             centroidsCheckpoint = centroidsData.map(x => { return { ...x } });
+            kmeans.setPoints(pointsData);
+            kmeans.setCentroids(centroidsData);
         }
         disableButton(controllsPlayButton);
         disableButton(controllsStepButton);
         enableButton(controllsPauseButton);
         enableButton(controllsResetButton);
         playing = true;
-        kmeans.setPoints(pointsData);
-        kmeans.setCentroids(centroidsData);
         kmeans.run();
     });
     controllsPauseButton.addEventListener("click", () => {
@@ -120,8 +120,13 @@ function createUserEvents() {
         playing = false;
     });
     controllsStepButton.addEventListener("click", () => {
-        kmeans.setPoints(pointsData);
-        kmeans.setCentroids(centroidsData);
+        if (firstRun) {
+            firstRun = false;
+            pointsCheckpoint = pointsData.map(x => { return { ...x } });
+            centroidsCheckpoint = centroidsData.map(x => { return { ...x } });
+            kmeans.setPoints(pointsData);
+            kmeans.setCentroids(centroidsData);
+        }
         kmeans.step();
     });
     controllsSlider.addEventListener("input", (e: Event) => {
