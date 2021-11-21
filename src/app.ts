@@ -107,6 +107,7 @@ function createUserEvents() {
         disableButton(controllsPlayButton);
         disableButton(controllsStepButton);
         enableButton(controllsPauseButton);
+        enableButton(controllsResetButton);
         playing = true;
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
