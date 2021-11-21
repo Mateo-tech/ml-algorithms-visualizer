@@ -6,10 +6,16 @@ The user can also see the description of each step in the Progress window.
 
 ## Algorithms
 K-Means - Implemented
+
 Gaussian Mixture - TBD
+
 PCA - TBD
+
 LDA - TBD
+
 Linear Regression - In Progress
+
+--
 
 More algorithms and functionality will be added.
 
