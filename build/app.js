@@ -41,8 +41,6 @@ class KMeans {
     }
     step() {
         return __awaiter$1(this, void 0, void 0, function* () {
-            //
-            //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
             if (this.points.length == 0 || this.centroids.length == 0) {
                 return;
             }
@@ -311,14 +309,14 @@ function createUserEvents() {
             firstRun = false;
             pointsCheckpoint = pointsData.map(x => { return Object.assign({}, x); });
             centroidsCheckpoint = centroidsData.map(x => { return Object.assign({}, x); });
+            kmeans.setPoints(pointsData);
+            kmeans.setCentroids(centroidsData);
         }
         disableButton(controllsPlayButton);
         disableButton(controllsStepButton);
         enableButton(controllsPauseButton);
         enableButton(controllsResetButton);
         exports.playing = true;
-        kmeans.setPoints(pointsData);
-        kmeans.setCentroids(centroidsData);
         kmeans.run();
     });
     controllsPauseButton.addEventListener("click", () => {
@@ -328,8 +326,13 @@ function createUserEvents() {
         exports.playing = false;
     });
     controllsStepButton.addEventListener("click", () => {
-        kmeans.setPoints(pointsData);
-        kmeans.setCentroids(centroidsData);
+        if (firstRun) {
+            firstRun = false;
+            pointsCheckpoint = pointsData.map(x => { return Object.assign({}, x); });
+            centroidsCheckpoint = centroidsData.map(x => { return Object.assign({}, x); });
+            kmeans.setPoints(pointsData);
+            kmeans.setCentroids(centroidsData);
+        }
         kmeans.step();
     });
     controllsSlider.addEventListener("input", (e) => {
