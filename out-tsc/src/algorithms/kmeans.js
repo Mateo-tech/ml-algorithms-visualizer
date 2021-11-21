@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters } from "../app.js";
+import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters, showDistanceLines } from "../app.js";
 export function isPoint(vector) {
     return vector.centroid !== undefined;
 }
@@ -28,7 +28,10 @@ export class KMeans {
             }
             while (playing) {
                 yield this.step();
-                yield new Promise(f => setTimeout(f, 1000 - animationSpeed + 1));
+                if (showDistanceLines) {
+                    yield new Promise(f => setTimeout(f, 1000 - animationSpeed + 1));
+                }
+                ;
             }
         });
     }
@@ -84,7 +87,9 @@ export class KMeans {
         if (distance < this.calculateDistance(point, point.centroid)) {
             point.centroid = centroid;
         }
-        drawLine(point, centroid);
+        if (showDistanceLines) {
+            drawLine(point, centroid);
+        }
     }
     assignToCentroid(point) {
         point.color = point.centroid != null ? point.centroid.color : "white";

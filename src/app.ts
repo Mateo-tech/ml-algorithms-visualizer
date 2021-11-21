@@ -35,6 +35,7 @@ let controllsPauseButton: HTMLButtonElement = document.getElementById("controlls
 let controllsStepButton: HTMLButtonElement = document.getElementById("controlls-step-btn") as HTMLButtonElement;
 let controllsResetButton: HTMLButtonElement = document.getElementById("controlls-reset-btn") as HTMLButtonElement;
 let controllsSlider: HTMLInputElement = document.getElementById("speed-range-slider") as HTMLInputElement;
+let controllsDistanceLinesCheckbox: HTMLInputElement = document.getElementById("distance-lines-checkbox") as HTMLInputElement;
 
 // Verbose
 let mainMessage: HTMLHeadElement = document.getElementById("message-window-main-message") as HTMLButtonElement;
@@ -47,6 +48,8 @@ let pointsCheckpoint: Point[] = [];
 let centroidsCheckpoint: Centroid[] = [];
 
 let firstRun = true;
+
+export let showDistanceLines = true;
 
 let mode: string = "point"; //"none", "point", "centroid"
 
@@ -136,7 +139,9 @@ function createUserEvents() {
         moveCentroids(centroidsCheckpoint);
         kmeans = new KMeans(pointsCheckpoint, centroidsCheckpoint);
     });
-
+    controllsDistanceLinesCheckbox.addEventListener("change", () => {
+        showDistanceLines = !showDistanceLines;
+    });
 }
 
 // TODO Don't pass the data from kmeans

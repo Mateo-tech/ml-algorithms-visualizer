@@ -1,4 +1,4 @@
-import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters } from "../app.js";
+import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters, showDistanceLines } from "../app.js";
 
 export type Vector = {
     x: number;
@@ -41,7 +41,9 @@ export class KMeans {
 
         while (playing) {
             await this.step();
-            await new Promise(f => setTimeout(f, 1000 - animationSpeed + 1))
+            if (showDistanceLines) {
+                await new Promise(f => setTimeout(f, 1000 - animationSpeed + 1))
+            };
         }
     }
 
@@ -100,7 +102,9 @@ export class KMeans {
         if (distance < this.calculateDistance(point, point.centroid)) {
             point.centroid = centroid;
         }
-        drawLine(point, centroid);
+        if (showDistanceLines) {
+            drawLine(point, centroid);
+        }
     }
 
     private assignToCentroid(point: Point) {

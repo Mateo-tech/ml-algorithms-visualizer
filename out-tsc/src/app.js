@@ -33,6 +33,7 @@ let controllsPauseButton = document.getElementById("controlls-pause-btn");
 let controllsStepButton = document.getElementById("controlls-step-btn");
 let controllsResetButton = document.getElementById("controlls-reset-btn");
 let controllsSlider = document.getElementById("speed-range-slider");
+let controllsDistanceLinesCheckbox = document.getElementById("distance-lines-checkbox");
 // Verbose
 let mainMessage = document.getElementById("message-window-main-message");
 let subMessage = document.getElementById("message-window-sub-message");
@@ -41,6 +42,7 @@ let centroidsData = [];
 let pointsCheckpoint = [];
 let centroidsCheckpoint = [];
 let firstRun = true;
+export let showDistanceLines = true;
 let mode = "point"; //"none", "point", "centroid"
 export let playing = false;
 export let animationSpeed = controllsSlider.valueAsNumber;
@@ -121,7 +123,11 @@ function createUserEvents() {
         moveCentroids(centroidsCheckpoint);
         kmeans = new KMeans(pointsCheckpoint, centroidsCheckpoint);
     });
+    controllsDistanceLinesCheckbox.addEventListener("change", () => {
+        showDistanceLines = !showDistanceLines;
+    });
 }
+// TODO Don't pass the data from kmeans
 export function showClusters(points, centroids) {
     // TODO Temp solution
     playing = false;
