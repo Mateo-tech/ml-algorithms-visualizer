@@ -112,36 +112,38 @@ function createUserEvents() {
     controllsSlider.addEventListener("input", (e: Event) => {
         animationSpeed = (<HTMLInputElement>e.target).valueAsNumber;
     });
-    controllsResetButton.addEventListener("click", (e) => {
-        let polygons = []
-        for (let i = 0; i < centroidsData.length; i++) {
-            let testCluster: Point[] = pointsData.filter(point => point.centroid === centroidsData[i]);
-            let hull = convexhull.makeHull(testCluster);
-            polygons.push(hull);
-        }
-        clustersGroup
-                .selectAll("polygon")
-                .data(polygons)
-                .enter()
-                .append("polygon")
-                .attr("points", function(d) {
-                    return d.map(function(d) {
-                        return [d.x, d.y].join(", ");
-                    }).join(" ");
-                })
-                .attr("stroke", function(d) {
-                    return d.map(function(d) {
-                        return d.color;
-                    })[0];
-                })
-                .attr("fill", function(d) {
-                    return d.map(function(d) {
-                        return d.color;
-                    })[0];
-                })
-                .attr("fill-opacity", "0.05")
-                .attr("stroke-width", 1);
-    })
+
+}
+
+export function showClusters() {
+    let polygons = []
+    for (let i = 0; i < centroidsData.length; i++) {
+        let testCluster: Point[] = pointsData.filter(point => point.centroid === centroidsData[i]);
+        let hull = convexhull.makeHull(testCluster);
+        polygons.push(hull);
+    }
+    clustersGroup
+        .selectAll("polygon")
+        .data(polygons)
+        .enter()
+        .append("polygon")
+        .attr("points", function (d) {
+            return d.map(function (d) {
+                return [d.x, d.y].join(", ");
+            }).join(" ");
+        })
+        .attr("stroke", function (d) {
+            return d.map(function (d) {
+                return d.color;
+            })[0];
+        })
+        .attr("fill", function (d) {
+            return d.map(function (d) {
+                return d.color;
+            })[0];
+        })
+        .attr("fill-opacity", "0.05")
+        .attr("stroke-width", 1);
 }
 
 function enableButton(button: HTMLButtonElement) {

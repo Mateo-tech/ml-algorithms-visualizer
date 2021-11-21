@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor } from "../app.js";
+import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters } from "../app.js";
 export function isPoint(vector) {
     return vector.centroid !== undefined;
 }
@@ -39,7 +39,10 @@ export class KMeans {
         if (this.points.length == 0 || this.centroids.length == 0) {
             return;
         }
-        //console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
+        if (this.currentIter >= this.maxIter) {
+            showClusters();
+            return;
+        }
         //Drop line if exists
         removeLine();
         // Measuring distances and assigning to centroids

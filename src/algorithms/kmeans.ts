@@ -1,4 +1,4 @@
-import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor } from "../app.js";
+import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters } from "../app.js";
 
 export type Vector = {
     x: number;
@@ -54,7 +54,10 @@ export class KMeans {
             return;
         }
 
-        //console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
+        if (this.currentIter >= this.maxIter) {
+            showClusters();
+            return;
+        }
 
         //Drop line if exists
         removeLine();
