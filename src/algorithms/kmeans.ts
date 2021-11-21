@@ -1,4 +1,4 @@
-import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters, showDistanceLines } from "../app.js";
+import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters, showDistanceLines, pushMessage } from "../app.js";
 
 export type Vector = {
     x: number;
@@ -48,8 +48,7 @@ export class KMeans {
     }
 
     public async step() {
-        //pushMessage("Checking distances & assigning points to the closest centroid...")
-        //pushMessage("Calculating the means and updating centroids...", undefined);
+        //
         //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
 
         if (this.points.length == 0 || this.centroids.length == 0) {
@@ -66,6 +65,7 @@ export class KMeans {
 
         // Measuring distances and assigning to centroids
         if (this.state == 0) {
+            pushMessage(this.currentIter + 1, "Checking distances & assigning points to the closest centroid...", undefined)
             this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
             if (this.centroidIndex + 1 == this.centroids.length) {
                 this.assignToCentroid(this.points[this.pointIndex]);
@@ -78,6 +78,7 @@ export class KMeans {
             this.centroidIndex++;
         // Moving centroids (=> One full iteration)
         } else if (this.state == 1) {
+            pushMessage(this.currentIter + 1, "Calculating the means and updating centroids...", "");
             this.updateCentroids();
             this.pointIndex = 0;
             this.centroidIndex = 0;
@@ -109,6 +110,7 @@ export class KMeans {
 
     private assignToCentroid(point: Point) {
         point.color = point.centroid != null ? point.centroid.color : "white";
+        pushMessage(this.currentIter + 1, undefined, "Point (" + point.x + ", " + point.y + ") assigned to centroid (" + point.centroid?.x + ", " + point.centroid?.y + ")" + "    ▇".fontcolor(point.color));
         changePointColor(point);
     }
 
@@ -121,8 +123,8 @@ export class KMeans {
                 sumX += clusteteredPoints[j].x;
                 sumY += clusteteredPoints[j].y;
             }
-            let newX: number = sumX / clusteteredPoints.length;
-            let newY: number = sumY / clusteteredPoints.length;
+            let newX: number = Math.floor(sumX / clusteteredPoints.length);
+            let newY: number = Math.floor(sumY / clusteteredPoints.length);
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }

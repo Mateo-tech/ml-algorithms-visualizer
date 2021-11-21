@@ -35,6 +35,7 @@ let controllsResetButton = document.getElementById("controlls-reset-btn");
 let controllsSlider = document.getElementById("speed-range-slider");
 let controllsDistanceLinesCheckbox = document.getElementById("distance-lines-checkbox");
 // Verbose
+let iteration = document.getElementById("message-window-iteration");
 let mainMessage = document.getElementById("message-window-main-message");
 let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
@@ -50,12 +51,12 @@ let centroidColors = [
     '#ED0A3F',
     '#0095B7',
     '#33CC99',
-    '#00468C',
+    '#cc5454',
     '#0066FF',
     '#EE34D2',
     '#C88A65',
     '#A50B5E',
-    '#733380',
+    '#e9dc64',
     '#87421F'
 ];
 createUserEvents();
@@ -302,12 +303,15 @@ function addCentroid(x, y, color) {
         drawVector(centroid);
     }
 }
-export function pushMessage(mainMessageText, subMessageText) {
+export function pushMessage(iterationNumber, mainMessageText, subMessageText) {
+    if (iterationNumber) {
+        iteration.innerText = "Iteration " + iterationNumber.toString();
+    }
     if (mainMessageText != undefined) {
         mainMessage.innerText = mainMessageText;
     }
     if (subMessageText != undefined) {
-        subMessage.innerText = subMessageText;
+        subMessage.innerHTML = subMessageText;
     }
 }
 let kmeans = new KMeans([], []);

@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters, showDistanceLines } from "../app.js";
+import { moveCentroids, playing, animationSpeed, removeLine, drawLine, changePointColor, showClusters, showDistanceLines, pushMessage } from "../app.js";
 export function isPoint(vector) {
     return vector.centroid !== undefined;
 }
@@ -37,8 +37,7 @@ export class KMeans {
     }
     step() {
         return __awaiter(this, void 0, void 0, function* () {
-            //pushMessage("Checking distances & assigning points to the closest centroid...")
-            //pushMessage("Calculating the means and updating centroids...", undefined);
+            //
             //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
             if (this.points.length == 0 || this.centroids.length == 0) {
                 return;
@@ -51,6 +50,7 @@ export class KMeans {
             removeLine();
             // Measuring distances and assigning to centroids
             if (this.state == 0) {
+                pushMessage(this.currentIter + 1, "Checking distances & assigning points to the closest centroid...", undefined);
                 this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
                 if (this.centroidIndex + 1 == this.centroids.length) {
                     this.assignToCentroid(this.points[this.pointIndex]);
@@ -64,6 +64,7 @@ export class KMeans {
                 // Moving centroids (=> One full iteration)
             }
             else if (this.state == 1) {
+                pushMessage(this.currentIter + 1, "Calculating the means and updating centroids...", "");
                 this.updateCentroids();
                 this.pointIndex = 0;
                 this.centroidIndex = 0;
@@ -92,7 +93,9 @@ export class KMeans {
         }
     }
     assignToCentroid(point) {
+        var _a, _b;
         point.color = point.centroid != null ? point.centroid.color : "white";
+        pushMessage(this.currentIter + 1, undefined, "Point (" + point.x + ", " + point.y + ") assigned to centroid (" + ((_a = point.centroid) === null || _a === void 0 ? void 0 : _a.x) + ", " + ((_b = point.centroid) === null || _b === void 0 ? void 0 : _b.y) + ")" + "    ▇".fontcolor(point.color));
         changePointColor(point);
     }
     updateCentroids() {
@@ -105,8 +108,8 @@ export class KMeans {
                     sumX += clusteteredPoints[j].x;
                     sumY += clusteteredPoints[j].y;
                 }
-                let newX = sumX / clusteteredPoints.length;
-                let newY = sumY / clusteteredPoints.length;
+                let newX = Math.floor(sumX / clusteteredPoints.length);
+                let newY = Math.floor(sumY / clusteteredPoints.length);
                 this.centroids[i].x = newX;
                 this.centroids[i].y = newY;
             }
