@@ -285,6 +285,9 @@ export function moveCentroids(updatedCentroids) {
     });
 }
 function addPoint(x, y, color = "white", centroid = null) {
+    if (pointsData.length >= 1000) {
+        return;
+    }
     let point = { x: x, y: y, color: color, centroid: centroid };
     pointsData.push(point);
     drawVector(point);
