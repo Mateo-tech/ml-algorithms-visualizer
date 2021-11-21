@@ -38,6 +38,9 @@ let mainMessage = document.getElementById("message-window-main-message");
 let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
 let centroidsData = [];
+let pointsCheckpoint = [];
+let centroidsCheckpoint = [];
+let firstRun = true;
 let mode; //"none", "point", "centroid"
 export let playing = false;
 export let animationSpeed = controllsSlider.valueAsNumber;
@@ -77,6 +80,11 @@ function createUserEvents() {
         if (pointsData.length == 0 || centroidColors.length == 0) {
             return;
         }
+        if (firstRun) {
+            firstRun = false;
+            pointsCheckpoint = pointsData.map(x => { return Object.assign({}, x); });
+            centroidsCheckpoint = centroidsData.map(x => { return Object.assign({}, x); });
+        }
         disableButton(controllsPlayButton);
         disableButton(controllsStepButton);
         enableButton(controllsPauseButton);
@@ -98,6 +106,20 @@ function createUserEvents() {
     });
     controllsSlider.addEventListener("input", (e) => {
         animationSpeed = e.target.valueAsNumber;
+    });
+    controllsResetButton.addEventListener("click", () => {
+        playing = false;
+        disableButton(controllsPauseButton);
+        enableButton(controllsStepButton);
+        enableButton(controllsPlayButton);
+        distancesGroup.selectAll("line").remove();
+        clustersGroup.selectAll("polygon").remove();
+        for (let i = 0; i < pointsCheckpoint.length; i++) {
+            pointsCheckpoint[i].color = "white";
+            changePointColor(pointsCheckpoint[i]);
+        }
+        moveCentroids(centroidsCheckpoint);
+        kmeans = new KMeans(pointsCheckpoint, centroidsCheckpoint);
     });
 }
 export function showClusters() {
@@ -155,13 +177,15 @@ function removePoints() {
     pointsData = [];
     pointsGroup.selectAll("circle").remove();
     distancesGroup.selectAll("line").remove();
+    clustersGroup.selectAll("polygon").remove();
     kmeans.removePoints();
 }
 function removeCentroids() {
     centroidsData = [];
     centroidsGroup.selectAll("circle").remove();
     distancesGroup.selectAll("line").remove();
-    kmeans.removePoints();
+    clustersGroup.selectAll("polygon").remove();
+    kmeans.removeCentroids();
 }
 function pressEventHandler(e) {
     let x = d3.pointer(e)[0];

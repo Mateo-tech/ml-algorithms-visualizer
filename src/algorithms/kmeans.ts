@@ -125,11 +125,11 @@ export class KMeans {
     }
 
     public setPoints(points: Point[]) {
-        this.points = points;
+        this.points = points.map(x => { return { ...x } });
     }
 
     public setCentroids(centroids: Centroid[]) {
-        this.centroids = centroids;
+        this.centroids = centroids.map(x => { return { ...x } });
     }
 
     public removePoints() {

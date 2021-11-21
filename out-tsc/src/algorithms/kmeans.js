@@ -104,10 +104,10 @@ export class KMeans {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
     }
     setPoints(points) {
-        this.points = points;
+        this.points = points.map(x => { return Object.assign({}, x); });
     }
     setCentroids(centroids) {
-        this.centroids = centroids;
+        this.centroids = centroids.map(x => { return Object.assign({}, x); });
     }
     removePoints() {
         this.points = [];
