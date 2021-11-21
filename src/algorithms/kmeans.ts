@@ -39,7 +39,7 @@ export class KMeans {
             return;
         }
 
-        while (playing && this.currentIter <= this.maxIter) {
+        while (playing) {
             await this.step();
             await new Promise(f => setTimeout(f, 1000 - animationSpeed + 1))
         }
@@ -55,7 +55,7 @@ export class KMeans {
         }
 
         if (this.currentIter >= this.maxIter) {
-            showClusters();
+            showClusters(this.points, this.centroids);
             return;
         }
 

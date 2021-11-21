@@ -26,7 +26,7 @@ export class KMeans {
             if (this.points.length == 0 || this.centroids.length == 0) {
                 return;
             }
-            while (playing && this.currentIter <= this.maxIter) {
+            while (playing) {
                 yield this.step();
                 yield new Promise(f => setTimeout(f, 1000 - animationSpeed + 1));
             }
@@ -41,7 +41,7 @@ export class KMeans {
                 return;
             }
             if (this.currentIter >= this.maxIter) {
-                showClusters();
+                showClusters(this.points, this.centroids);
                 return;
             }
             //Drop line if exists

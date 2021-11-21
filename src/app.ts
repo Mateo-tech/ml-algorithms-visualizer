@@ -48,7 +48,7 @@ let centroidsCheckpoint: Centroid[] = [];
 
 let firstRun = true;
 
-let mode: string; //"none", "point", "centroid"
+let mode: string = "point"; //"none", "point", "centroid"
 
 export let playing = false;
 
@@ -139,11 +139,15 @@ function createUserEvents() {
 
 }
 
-export function showClusters() {
+// TODO Don't pass the data from kmeans
+export function showClusters(points: Point[], centroids: Centroid[]) {
+    // TODO Temp solution
+    playing = false;
+
     let polygons = []
-    for (let i = 0; i < centroidsData.length; i++) {
-        let testCluster: Point[] = pointsData.filter(point => point.centroid === centroidsData[i]);
-        let hull = convexhull.makeHull(testCluster);
+    for (let i = 0; i < centroids.length; i++) {
+        let cluster: Point[] = points.filter(point => point.centroid === centroids[i]);
+        let hull = convexhull.makeHull(cluster);
         polygons.push(hull);
     }
     clustersGroup
@@ -214,8 +218,6 @@ function removeCentroids() {
 function pressEventHandler(e: MouseEvent) {
     let x = d3.pointer(e)[0];
     let y = d3.pointer(e)[1];
-
-    console.log(x + ", " + y);
 
     switch (mode) {
         case "none": {
