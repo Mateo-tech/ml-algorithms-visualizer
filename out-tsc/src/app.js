@@ -29,14 +29,15 @@ let controllsPlayButton = document.getElementById("controlls-play-btn");
 let controllsPauseButton = document.getElementById("controlls-pause-btn");
 let controllsStepButton = document.getElementById("controlls-step-btn");
 let controllsResetButton = document.getElementById("controlls-reset-btnn");
-let controllsSliderButton = document.getElementById("speed-range-slider");
+let controllsSlider = document.getElementById("speed-range-slider");
 // Verbose
 let mainMessage = document.getElementById("message-window-main-message");
 let subMessage = document.getElementById("message-window-sub-message");
 let pointsData = [];
 let centroidsData = [];
 let mode; //"none", "point", "centroid"
-let pauseButtonPressed = false;
+let playing = false;
+let animationSpeed = controllsSlider.valueAsNumber;
 let centroidColors = [
     '#ED0A3F',
     '#0095B7',
@@ -51,7 +52,7 @@ let centroidColors = [
 ];
 createUserEvents();
 function createUserEvents() {
-    svg.on("click", (event) => pressEventHandler(event));
+    svg.on("click", (e) => pressEventHandler(e));
     addPointsManuallyButton.addEventListener("click", () => changeMode("point"));
     addPointsRandomlyButton.addEventListener("click", () => addVectorsRandomly(20, 200, "point"));
     // Load preset goes here
@@ -60,18 +61,40 @@ function createUserEvents() {
     addCentroidsRandomlyButton.addEventListener("click", () => addVectorsRandomly(2, 10, "centroid"));
     centroidsRemoveButton.addEventListener("click", () => removeCentroids());
     controllsPlayButton.addEventListener("click", () => {
+        if (pointsData.length == 0 || centroidColors.length == 0) {
+            return;
+        }
+        disableButton(controllsPlayButton);
+        disableButton(controllsStepButton);
+        enableButton(controllsPauseButton);
+        playing = true;
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
         kmeans.run();
     });
     controllsPauseButton.addEventListener("click", () => {
-        pauseButtonPressed = true;
+        disableButton(controllsPauseButton);
+        enableButton(controllsStepButton);
+        enableButton(controllsPlayButton);
+        playing = false;
     });
     controllsStepButton.addEventListener("click", () => {
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
         kmeans.step();
     });
+    controllsSlider.addEventListener("input", (e) => {
+        animationSpeed = e.target.valueAsNumber;
+        console.log(animationSpeed);
+    });
+}
+function enableButton(button) {
+    button.classList.remove("disabled", "btn-secondary");
+    button.classList.add("btn-info");
+}
+function disableButton(button) {
+    button.classList.remove("btn-info");
+    button.classList.add("disabled", "btn-secondary");
 }
 function changeMode(newMode) {
     mode = newMode;
@@ -89,11 +112,13 @@ function addVectorsRandomly(min, max, type) {
 function removePoints() {
     pointsData = [];
     pointsGroup.selectAll("circle").remove();
+    distancesGroup.selectAll("line").remove();
     kmeans.removePoints();
 }
 function removeCentroids() {
     centroidsData = [];
     centroidsGroup.selectAll("circle").remove();
+    distancesGroup.selectAll("line").remove();
     kmeans.removePoints();
 }
 function pressEventHandler(e) {
@@ -140,43 +165,50 @@ export function changePointColor(point) {
     pointsGroup
         .selectAll("circle[cx='" + point.x + "'][cy='" + point.y + "']")
         .data([point])
+        .transition()
+        .duration(100)
         .attr("fill", (p) => { return p.color; })
         .style("stroke", "none");
 }
 export function drawLine(x, y) {
-    let line = distancesGroup.selectAll("line").data([x]).enter().append("line");
-    line
-        .attr("x1", (d) => {
-        return d.x;
-    })
-        .attr("y1", (d) => {
-        return d.y;
-    })
-        .attr("x2", () => {
-        return y.x;
-    })
-        .attr("y2", () => {
-        return y.y;
-    })
-        .attr("stroke", "white")
-        .attr("stroke-opacity", 50);
+    return __awaiter(this, void 0, void 0, function* () {
+        let line = distancesGroup.selectAll("line").data([x]).enter().append("line");
+        line
+            .attr("x1", (d) => {
+            return d.x;
+        })
+            .attr("y1", (d) => {
+            return d.y;
+        })
+            .attr("x2", () => {
+            return y.x;
+        })
+            .attr("y2", () => {
+            return y.y;
+        })
+            .attr("stroke", "white")
+            .attr("stroke-width", "1px")
+            .attr("opacity", "0.2");
+    });
 }
 export function removeLine() {
     distancesGroup.selectAll("line").remove();
 }
 export function moveCentroids(updatedCentroids) {
-    let databoundCentroids = centroidsGroup.selectAll("circle").data(updatedCentroids);
-    ;
-    databoundCentroids.enter().append("circle");
-    databoundCentroids.exit().remove();
-    databoundCentroids
-        .transition()
-        .duration(300)
-        .attr("cx", (c) => {
-        return c.x;
-    })
-        .attr("cy", (c) => {
-        return c.y;
+    return __awaiter(this, void 0, void 0, function* () {
+        let databoundCentroids = centroidsGroup.selectAll("circle").data(updatedCentroids);
+        ;
+        databoundCentroids.enter().append("circle");
+        databoundCentroids.exit().remove();
+        databoundCentroids
+            .transition()
+            .duration(300)
+            .attr("cx", (c) => {
+            return c.x;
+        })
+            .attr("cy", (c) => {
+            return c.y;
+        });
     });
 }
 function addPoint(x, y, color = "white", centroid = null) {
@@ -217,15 +249,12 @@ export class KMeans {
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
-            while (!pauseButtonPressed && this.currentIter <= this.maxIter) {
-                if (this.state == 1) {
-                    yield new Promise(f => setTimeout(f, 100));
-                }
-                this.step();
-                //await new Promise(f => setTimeout(f, 1));
+            if (this.points.length == 0 || this.centroids.length == 0) {
+                return;
             }
-            if (!pauseButtonPressed) {
-                this.currentIter = 0;
+            while (playing && this.currentIter <= this.maxIter) {
+                this.step();
+                yield new Promise(f => setTimeout(f, 1000 - animationSpeed));
             }
         });
     }
@@ -236,7 +265,7 @@ export class KMeans {
         if (this.points.length == 0 || this.centroids.length == 0) {
             return;
         }
-        console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
+        //console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
         //Drop line if exists
         removeLine();
         if (this.state == 0) {
@@ -277,20 +306,22 @@ export class KMeans {
         changePointColor(point);
     }
     updateCentroids() {
-        for (let i = 0; i < this.centroids.length; i++) {
-            let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
-            let sumX = 0;
-            let sumY = 0;
-            for (let j = 0; j < clusteteredPoints.length; j++) {
-                sumX += clusteteredPoints[j].x;
-                sumY += clusteteredPoints[j].y;
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let i = 0; i < this.centroids.length; i++) {
+                let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
+                let sumX = 0;
+                let sumY = 0;
+                for (let j = 0; j < clusteteredPoints.length; j++) {
+                    sumX += clusteteredPoints[j].x;
+                    sumY += clusteteredPoints[j].y;
+                }
+                let newX = sumX / clusteteredPoints.length;
+                let newY = sumY / clusteteredPoints.length;
+                this.centroids[i].x = newX;
+                this.centroids[i].y = newY;
             }
-            let newX = sumX / clusteteredPoints.length;
-            let newY = sumY / clusteteredPoints.length;
-            this.centroids[i].x = newX;
-            this.centroids[i].y = newY;
-        }
-        moveCentroids(this.centroids);
+            yield moveCentroids(this.centroids);
+        });
     }
     calculateDistance(a, b) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));

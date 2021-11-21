@@ -43,7 +43,9 @@ let centroidsData: Centroid[] = [];
 
 let mode: string; //"none", "point", "centroid"
 
-let pauseButtonPressed = false;
+let playing = false;
+
+let animationSpeed: number = controllsSlider.valueAsNumber;
 
 let centroidColors: string[] = [
     '#ED0A3F',
@@ -61,7 +63,7 @@ let centroidColors: string[] = [
 createUserEvents();
 
 function createUserEvents() {
-    svg.on("click", (event) => pressEventHandler(event));
+    svg.on("click", (e) => pressEventHandler(e));
 
     addPointsManuallyButton.addEventListener("click", () => changeMode("point"));
     addPointsRandomlyButton.addEventListener("click", () => addVectorsRandomly(20, 200, "point"));
@@ -73,18 +75,42 @@ function createUserEvents() {
     centroidsRemoveButton.addEventListener("click", () => removeCentroids())
 
     controllsPlayButton.addEventListener("click", () => {
+        if (pointsData.length == 0 || centroidColors.length == 0) {
+            return;
+        }
+        disableButton(controllsPlayButton);
+        disableButton(controllsStepButton);
+        enableButton(controllsPauseButton);
+        playing = true;
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
         kmeans.run();
     });
     controllsPauseButton.addEventListener("click", () => {
-        pauseButtonPressed = true;
+        disableButton(controllsPauseButton);
+        enableButton(controllsStepButton);
+        enableButton(controllsPlayButton);
+        playing = false;
     });
     controllsStepButton.addEventListener("click", () => {
         kmeans.setPoints(pointsData);
         kmeans.setCentroids(centroidsData);
         kmeans.step();
     });
+    controllsSlider.addEventListener("input", (e: Event) => {
+        animationSpeed = (<HTMLInputElement>e.target).valueAsNumber;
+        console.log(animationSpeed);
+    });
+}
+
+function enableButton(button: HTMLButtonElement) {
+    button.classList.remove("disabled", "btn-secondary");
+    button.classList.add("btn-info");
+}
+
+function disableButton(button: HTMLButtonElement) {
+    button.classList.remove("btn-info");
+    button.classList.add("disabled", "btn-secondary");
 }
 
 function changeMode(newMode: string) {
@@ -105,12 +131,14 @@ function addVectorsRandomly(min: number, max: number, type: string) {
 function removePoints() {
     pointsData = [];
     pointsGroup.selectAll("circle").remove();
+    distancesGroup.selectAll("line").remove();
     kmeans.removePoints();
 }
 
 function removeCentroids() {
     centroidsData = [];
     centroidsGroup.selectAll("circle").remove();
+    distancesGroup.selectAll("line").remove();
     kmeans.removePoints();
 }
 
@@ -163,11 +191,13 @@ export function changePointColor(point: Point) {
     pointsGroup
         .selectAll("circle[cx='" + point.x + "'][cy='" + point.y + "']")
         .data([point])
+        .transition()
+        .duration(100)
         .attr("fill", (p) => { return p.color; })
         .style("stroke", "none");
 }
 
-export function drawLine(x: Vector, y: Vector) {
+export async function drawLine(x: Vector, y: Vector) {
     let line = distancesGroup.selectAll("line").data([x]).enter().append("line");
     line
         .attr("x1", (d) => {
@@ -183,14 +213,15 @@ export function drawLine(x: Vector, y: Vector) {
             return y.y;
         })
         .attr("stroke", "white")
-        .attr("stroke-opacity", 50);
+        .attr("stroke-width", "1px")
+        .attr("opacity", "0.2");
 }
 
 export function removeLine() {
     distancesGroup.selectAll("line").remove();
 }
 
-export function moveCentroids(updatedCentroids: Centroid[]) {
+export async function moveCentroids(updatedCentroids: Centroid[]) {
     let databoundCentroids = centroidsGroup.selectAll("circle").data(updatedCentroids);;
     databoundCentroids.enter().append("circle");
     databoundCentroids.exit().remove();
@@ -265,15 +296,13 @@ export class KMeans {
     }
 
     public async run() {
-        while (!pauseButtonPressed && this.currentIter <= this.maxIter) {
-            if (this.state == 1) {
-                await new Promise(f => setTimeout(f, 100));
-            }
-            this.step();
-            //await new Promise(f => setTimeout(f, 1));
+        if (this.points.length == 0 || this.centroids.length == 0) {
+            return;
         }
-        if (!pauseButtonPressed) {
-            this.currentIter = 0;
+
+        while (playing && this.currentIter <= this.maxIter) {
+            this.step();
+            await new Promise(f => setTimeout(f, 1000 - animationSpeed))
         }
     }
 
@@ -286,7 +315,7 @@ export class KMeans {
             return;
         }
 
-        console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
+        //console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
 
         //Drop line if exists
         removeLine();
@@ -330,7 +359,7 @@ export class KMeans {
         changePointColor(point);
     }
 
-    private updateCentroids() {
+    private async updateCentroids() {
         for (let i = 0; i < this.centroids.length; i++) {
             let clusteteredPoints: Point[] = this.points.filter(point => point.centroid === this.centroids[i]);
             let sumX: number = 0;
@@ -344,7 +373,7 @@ export class KMeans {
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }
-        moveCentroids(this.centroids);
+        await moveCentroids(this.centroids);
     }
 
     private calculateDistance(a: Vector, b: Vector) {
