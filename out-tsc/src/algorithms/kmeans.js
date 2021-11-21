@@ -27,46 +27,52 @@ export class KMeans {
                 return;
             }
             while (playing && this.currentIter <= this.maxIter) {
-                this.step();
-                yield new Promise(f => setTimeout(f, 1000 - animationSpeed));
+                yield this.step();
+                yield new Promise(f => setTimeout(f, 1000 - animationSpeed + 1));
             }
         });
     }
     step() {
-        //pushMessage("Checking distances & assigning points to the closest centroid...")
-        //pushMessage("Calculating the means and updating centroids...", undefined);
-        //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
-        if (this.points.length == 0 || this.centroids.length == 0) {
-            return;
-        }
-        if (this.currentIter >= this.maxIter) {
-            showClusters();
-            return;
-        }
-        //Drop line if exists
-        removeLine();
-        // Measuring distances and assigning to centroids
-        if (this.state == 0) {
-            this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
-            if (this.centroidIndex + 1 == this.centroids.length) {
-                this.assignToCentroid(this.points[this.pointIndex]);
-                this.pointIndex++;
-                this.centroidIndex = -1;
+        return __awaiter(this, void 0, void 0, function* () {
+            //pushMessage("Checking distances & assigning points to the closest centroid...")
+            //pushMessage("Calculating the means and updating centroids...", undefined);
+            //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
+            if (this.points.length == 0 || this.centroids.length == 0) {
+                return;
             }
-            if (this.pointIndex == this.points.length) {
-                this.state = 1;
+            if (this.currentIter >= this.maxIter) {
+                showClusters();
+                return;
             }
-            this.centroidIndex++;
-            // Moving centroids (=> One full iteration)
-        }
-        else if (this.state == 1) {
-            this.updateCentroids();
-            this.pointIndex = 0;
-            this.centroidIndex = 0;
-            this.state = 0;
-            this.currentIter++;
-        }
-        return;
+            //Drop line if exists
+            removeLine();
+            // Measuring distances and assigning to centroids
+            if (this.state == 0) {
+                this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
+                if (this.centroidIndex + 1 == this.centroids.length) {
+                    this.assignToCentroid(this.points[this.pointIndex]);
+                    this.pointIndex++;
+                    this.centroidIndex = -1;
+                }
+                if (this.pointIndex == this.points.length) {
+                    this.state = 1;
+                }
+                this.centroidIndex++;
+                // Moving centroids (=> One full iteration)
+            }
+            else if (this.state == 1) {
+                this.updateCentroids();
+                this.pointIndex = 0;
+                this.centroidIndex = 0;
+                this.state = 0;
+                this.currentIter++;
+                // TODO Move this
+                if (playing) {
+                    yield new Promise(f => setTimeout(f, 300));
+                }
+            }
+            return;
+        });
     }
     checkDistance(point, centroid) {
         let distance = this.calculateDistance(point, centroid);
@@ -85,20 +91,22 @@ export class KMeans {
         changePointColor(point);
     }
     updateCentroids() {
-        for (let i = 0; i < this.centroids.length; i++) {
-            let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
-            let sumX = 0;
-            let sumY = 0;
-            for (let j = 0; j < clusteteredPoints.length; j++) {
-                sumX += clusteteredPoints[j].x;
-                sumY += clusteteredPoints[j].y;
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let i = 0; i < this.centroids.length; i++) {
+                let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
+                let sumX = 0;
+                let sumY = 0;
+                for (let j = 0; j < clusteteredPoints.length; j++) {
+                    sumX += clusteteredPoints[j].x;
+                    sumY += clusteteredPoints[j].y;
+                }
+                let newX = sumX / clusteteredPoints.length;
+                let newY = sumY / clusteteredPoints.length;
+                this.centroids[i].x = newX;
+                this.centroids[i].y = newY;
             }
-            let newX = sumX / clusteteredPoints.length;
-            let newY = sumY / clusteteredPoints.length;
-            this.centroids[i].x = newX;
-            this.centroids[i].y = newY;
-        }
-        moveCentroids(this.centroids);
+            moveCentroids(this.centroids);
+        });
     }
     calculateDistance(a, b) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));

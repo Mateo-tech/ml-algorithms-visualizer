@@ -268,7 +268,7 @@ export function moveCentroids(updatedCentroids) {
         databoundCentroids.exit().remove();
         databoundCentroids
             .transition()
-            .duration(500)
+            .duration(300)
             .attr("cx", (c) => {
             return c.x;
         })

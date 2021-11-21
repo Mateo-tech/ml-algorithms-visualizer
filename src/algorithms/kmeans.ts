@@ -40,12 +40,12 @@ export class KMeans {
         }
 
         while (playing && this.currentIter <= this.maxIter) {
-            this.step();
-            await new Promise(f => setTimeout(f, 1000 - animationSpeed))
+            await this.step();
+            await new Promise(f => setTimeout(f, 1000 - animationSpeed + 1))
         }
     }
 
-    public step() {
+    public async step() {
         //pushMessage("Checking distances & assigning points to the closest centroid...")
         //pushMessage("Calculating the means and updating centroids...", undefined);
         //pushMessage(undefined, "Point (" + this.points[j].x + ", " + this.points[j].y + ") assigned to centroid (" + closestCentroid.x + ", " + closestCentroid.y + ")");
@@ -81,6 +81,11 @@ export class KMeans {
             this.centroidIndex = 0;
             this.state = 0;
             this.currentIter++;
+            
+            // TODO Move this
+            if (playing) {
+                await new Promise(f => setTimeout(f, 300))
+            }
         }
         return;
     }
@@ -103,7 +108,7 @@ export class KMeans {
         changePointColor(point);
     }
 
-    private updateCentroids() {
+    private async updateCentroids() {
         for (let i = 0; i < this.centroids.length; i++) {
             let clusteteredPoints: Point[] = this.points.filter(point => point.centroid === this.centroids[i]);
             let sumX: number = 0;
@@ -117,7 +122,7 @@ export class KMeans {
             this.centroids[i].x = newX;
             this.centroids[i].y = newY;
         }
-        moveCentroids(this.centroids);
+         moveCentroids(this.centroids);
     }
 
     private calculateDistance(a: Vector, b: Vector) {
