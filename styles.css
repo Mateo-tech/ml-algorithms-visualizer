@@ -62,8 +62,8 @@ body {
     box-shadow: none;
 }
 
-#speed-range {
-    width: 500px;
+#speed-range-slider {
+    width: 100%;
 }
 
 /* Verbose */
