@@ -11,6 +11,7 @@ const WIDTH = 900;
 const HEIGHT = 550;
 // Canvas
 const svg = d3.select("svg").attr("width", WIDTH).attr("height", HEIGHT);
+const clustersGroup = svg.append("g");
 const distancesGroup = svg.append("g");
 const pointsGroup = svg.append("g");
 const centroidsGroup = svg.append("g");
@@ -28,7 +29,7 @@ let centroidsRemoveButton = document.getElementById("add-centroids-remove-btn");
 let controllsPlayButton = document.getElementById("controlls-play-btn");
 let controllsPauseButton = document.getElementById("controlls-pause-btn");
 let controllsStepButton = document.getElementById("controlls-step-btn");
-let controllsResetButton = document.getElementById("controlls-reset-btnn");
+let controllsResetButton = document.getElementById("controlls-reset-btn");
 let controllsSlider = document.getElementById("speed-range-slider");
 // Verbose
 let mainMessage = document.getElementById("message-window-main-message");
@@ -56,10 +57,20 @@ function createUserEvents() {
     addPointsManuallyButton.addEventListener("click", () => changeMode("point"));
     addPointsRandomlyButton.addEventListener("click", () => addVectorsRandomly(20, 200, "point"));
     // Load preset goes here
-    pointsRemoveButton.addEventListener("click", () => removePoints());
+    pointsRemoveButton.addEventListener("click", () => {
+        disableButton(controllsPauseButton);
+        enableButton(controllsStepButton);
+        enableButton(controllsPlayButton);
+        removePoints();
+    });
     addCentroidsManuallyButton.addEventListener("click", () => changeMode("centroid"));
     addCentroidsRandomlyButton.addEventListener("click", () => addVectorsRandomly(2, 10, "centroid"));
-    centroidsRemoveButton.addEventListener("click", () => removeCentroids());
+    centroidsRemoveButton.addEventListener("click", () => {
+        disableButton(controllsPauseButton);
+        enableButton(controllsStepButton);
+        enableButton(controllsPlayButton);
+        removeCentroids();
+    });
     controllsPlayButton.addEventListener("click", () => {
         if (pointsData.length == 0 || centroidColors.length == 0) {
             return;
@@ -85,7 +96,36 @@ function createUserEvents() {
     });
     controllsSlider.addEventListener("input", (e) => {
         animationSpeed = e.target.valueAsNumber;
-        console.log(animationSpeed);
+    });
+    controllsResetButton.addEventListener("click", (e) => {
+        let polygons = [];
+        for (let i = 0; i < centroidsData.length; i++) {
+            let testCluster = pointsData.filter(point => point.centroid === centroidsData[i]);
+            let hull = convexhull.makeHull(testCluster);
+            polygons.push(hull);
+        }
+        clustersGroup
+            .selectAll("polygon")
+            .data(polygons)
+            .enter()
+            .append("polygon")
+            .attr("points", function (d) {
+            return d.map(function (d) {
+                return [d.x, d.y].join(", ");
+            }).join(" ");
+        })
+            .attr("stroke", function (d) {
+            return d.map(function (d) {
+                return d.color;
+            })[0];
+        })
+            .attr("fill", function (d) {
+            return d.map(function (d) {
+                return d.color;
+            })[0];
+        })
+            .attr("fill-opacity", "0.05")
+            .attr("stroke-width", 1);
     });
 }
 function enableButton(button) {
@@ -202,7 +242,7 @@ export function moveCentroids(updatedCentroids) {
         databoundCentroids.exit().remove();
         databoundCentroids
             .transition()
-            .duration(300)
+            .duration(500)
             .attr("cx", (c) => {
             return c.x;
         })
@@ -239,7 +279,7 @@ function isPoint(vector) {
 }
 export class KMeans {
     constructor(points, centroids) {
-        this.maxIter = 20;
+        this.maxIter = 5;
         this.currentIter = 0;
         this.state = 0;
         this.pointIndex = 0;
@@ -268,6 +308,7 @@ export class KMeans {
         //console.log("State: " + this.state + ", Point index: " + this.pointIndex + ", Centroid index: " + this.centroidIndex);
         //Drop line if exists
         removeLine();
+        // Measuring distances and assigning to centroids
         if (this.state == 0) {
             this.checkDistance(this.points[this.pointIndex], this.centroids[this.centroidIndex]);
             if (this.centroidIndex + 1 == this.centroids.length) {
@@ -279,6 +320,7 @@ export class KMeans {
                 this.state = 1;
             }
             this.centroidIndex++;
+            // Moving centroids (=> One full iteration)
         }
         else if (this.state == 1) {
             this.updateCentroids();
@@ -306,22 +348,20 @@ export class KMeans {
         changePointColor(point);
     }
     updateCentroids() {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (let i = 0; i < this.centroids.length; i++) {
-                let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
-                let sumX = 0;
-                let sumY = 0;
-                for (let j = 0; j < clusteteredPoints.length; j++) {
-                    sumX += clusteteredPoints[j].x;
-                    sumY += clusteteredPoints[j].y;
-                }
-                let newX = sumX / clusteteredPoints.length;
-                let newY = sumY / clusteteredPoints.length;
-                this.centroids[i].x = newX;
-                this.centroids[i].y = newY;
+        for (let i = 0; i < this.centroids.length; i++) {
+            let clusteteredPoints = this.points.filter(point => point.centroid === this.centroids[i]);
+            let sumX = 0;
+            let sumY = 0;
+            for (let j = 0; j < clusteteredPoints.length; j++) {
+                sumX += clusteteredPoints[j].x;
+                sumY += clusteteredPoints[j].y;
             }
-            yield moveCentroids(this.centroids);
-        });
+            let newX = sumX / clusteteredPoints.length;
+            let newY = sumY / clusteteredPoints.length;
+            this.centroids[i].x = newX;
+            this.centroids[i].y = newY;
+        }
+        moveCentroids(this.centroids);
     }
     calculateDistance(a, b) {
         return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
@@ -340,4 +380,70 @@ export class KMeans {
     }
 }
 let kmeans = new KMeans([], []);
+var convexhull;
+(function (convexhull) {
+    // Returns a new array of points representing the convex hull of
+    // the given set of points. The convex hull excludes collinear points.
+    // This algorithm runs in O(n log n) time.
+    function makeHull(points) {
+        let newPoints = points.slice();
+        newPoints.sort(convexhull.POINT_COMPARATOR);
+        return convexhull.makeHullPresorted(newPoints);
+    }
+    convexhull.makeHull = makeHull;
+    // Returns the convex hull, assuming that each points[i] <= points[i + 1]. Runs in O(n) time.
+    function makeHullPresorted(points) {
+        if (points.length <= 1)
+            return points.slice();
+        // Andrew's monotone chain algorithm. Positive y coordinates correspond to "up"
+        // as per the mathematical convention, instead of "down" as per the computer
+        // graphics convention. This doesn't affect the correctness of the result.
+        let upperHull = [];
+        for (let i = 0; i < points.length; i++) {
+            const p = points[i];
+            while (upperHull.length >= 2) {
+                const q = upperHull[upperHull.length - 1];
+                const r = upperHull[upperHull.length - 2];
+                if ((q.x - r.x) * (p.y - r.y) >= (q.y - r.y) * (p.x - r.x))
+                    upperHull.pop();
+                else
+                    break;
+            }
+            upperHull.push(p);
+        }
+        upperHull.pop();
+        let lowerHull = [];
+        for (let i = points.length - 1; i >= 0; i--) {
+            const p = points[i];
+            while (lowerHull.length >= 2) {
+                const q = lowerHull[lowerHull.length - 1];
+                const r = lowerHull[lowerHull.length - 2];
+                if ((q.x - r.x) * (p.y - r.y) >= (q.y - r.y) * (p.x - r.x))
+                    lowerHull.pop();
+                else
+                    break;
+            }
+            lowerHull.push(p);
+        }
+        lowerHull.pop();
+        if (upperHull.length == 1 && lowerHull.length == 1 && upperHull[0].x == lowerHull[0].x && upperHull[0].y == lowerHull[0].y)
+            return upperHull;
+        else
+            return upperHull.concat(lowerHull);
+    }
+    convexhull.makeHullPresorted = makeHullPresorted;
+    function POINT_COMPARATOR(a, b) {
+        if (a.x < b.x)
+            return -1;
+        else if (a.x > b.x)
+            return +1;
+        else if (a.y < b.y)
+            return -1;
+        else if (a.y > b.y)
+            return +1;
+        else
+            return 0;
+    }
+    convexhull.POINT_COMPARATOR = POINT_COMPARATOR;
+})(convexhull || (convexhull = {}));
 //# sourceMappingURL=app.js.map
